@@ -1,0 +1,97 @@
+{
+  "name": "progbot",
+  "author": "TeamBN",
+  "description": "TeamBN's progbot",
+  "version": "2.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TeamBattleNet/ProgBot.git"
+  },
+  "engines": {
+    "node": ">=14.5.0"
+  },
+  "scripts": {
+    "start-dev": "TS_NODE_FILES=true LOG_LEVEL=debug ts-node src/index.ts",
+    "build": "tsc",
+    "lint": "eslint --ext .ts --format unix src/ && prettier --check 'src/**/*.ts'",
+    "format": "prettier --write 'src/**/*.ts'",
+    "test": "NODE_ENV=test TS_NODE_FILES=true LOG_LEVEL=silent nyc --reporter=text mocha -r ts-node/register --color 'src/**/*.spec.ts' --exit",
+    "test:docker": "docker build . -f test.Dockerfile -t progbot-testing-container && docker run -it progbot-testing-container",
+    "clean": "rm -rf dist/ .nyc_output/",
+    "check-outdated": "check-outdated --ignore-pre-releases"
+  },
+  "dependencies": {
+    "chalk": "^4.1.0",
+    "loglevel": "^1.7.0",
+    "loglevel-plugin-prefix": "^0.8.4",
+    "source-map-support": "^0.5.19",
+    "tslib": "^2.0.1"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.12",
+    "@types/mocha": "^8.0.3",
+    "@types/node": "^12.12.56",
+    "@types/sinon": "^9.0.5",
+    "@typescript-eslint/eslint-plugin": "^4.1.0",
+    "@typescript-eslint/parser": "^4.1.0",
+    "chai": "^4.2.0",
+    "check-outdated": "^2.3.2",
+    "eslint": "^7.8.1",
+    "eslint-config-prettier": "^6.11.0",
+    "mocha": "^8.1.3",
+    "nyc": "^15.1.0",
+    "prettier": "^2.1.1",
+    "sinon": "^9.0.3",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.2"
+  },
+  "nyc": {
+    "extension": [
+      ".ts"
+    ],
+    "include": [
+      "src/**/*.ts"
+    ],
+    "exclude": [
+      "src/**/*.spec.ts"
+    ],
+    "all": true
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
+      "prettier",
+      "prettier/@typescript-eslint"
+    ],
+    "env": {
+      "browser": false,
+      "node": true
+    },
+    "parserOptions": {
+      "project": "./tsconfig.json"
+    },
+    "rules": {
+      "no-console": "error",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/explicit-module-boundary-types": "off",
+      "@typescript-eslint/no-empty-function": "off",
+      "max-len": [
+        "error",
+        {
+          "code": 200
+        }
+      ]
+    }
+  },
+  "prettier": {
+    "tabWidth": 2,
+    "semi": true,
+    "singleQuote": true,
+    "printWidth": 180
+  }
+}
