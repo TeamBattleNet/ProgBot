@@ -1,12 +1,12 @@
-const { SQL_DATABASE } = process.env;
-module.exports = [{
-  name: 'default',
+const { Config } = require('./dist/clients/configuration');
+
+module.exports = {
   // TODO change to better-sqlite3 on next typeorm release
   type: 'sqlite',
-  database: SQL_DATABASE || 'runtime/progbot.db',
+  database: Config.getConfig().database || 'runtime/progbot.db',
   synchronize: false,
   cache: true,
   entities: ['./dist/models/**/*.js'],
   migrations: ['./dist/migrations/**/*.js'],
   cli: { migrationsDir: 'src/migrations', entitiesDir: 'src/models' },
-}];
+};
