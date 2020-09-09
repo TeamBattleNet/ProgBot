@@ -12,7 +12,10 @@ RUN yarn build && mv yarnclean .yarnclean && yarn --frozen-lockfile --non-intera
 
 FROM base AS release
 ENV NODE_ENV production
+RUN chown -R 1000:1000 .
 COPY --from=builder --chown=1000:1000 /app/dist ./dist
 COPY --from=builder --chown=1000:1000 /app/node_modules ./node_modules
+COPY --from=builder --chown=1000:1000 /app/ormconfig.js ./ormconfig.js
+COPY --from=builder --chown=1000:1000 /app/chips ./chips
 USER 1000:1000
-CMD [ "node", "dist/index.js" ]
+CMD ["sh", "-c", "node node_modules/typeorm/cli migration:run && node dist/index.js"]

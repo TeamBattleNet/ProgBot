@@ -12,11 +12,14 @@
   },
   "scripts": {
     "start-dev": "TS_NODE_FILES=true LOG_LEVEL=debug ts-node src/index.ts",
-    "build": "tsc",
+    "build": "rm -rf dist/ && tsc",
     "lint": "eslint --ext .ts --format unix src/ && prettier --check 'src/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts'",
     "test": "NODE_ENV=test TS_NODE_FILES=true LOG_LEVEL=silent nyc --reporter=text mocha -r ts-node/register --color 'src/**/*.spec.ts' --exit",
     "test:docker": "docker build . -f test.Dockerfile -t progbot-testing-container && docker run -it progbot-testing-container",
+    "typeorm:cli": "ts-node ./node_modules/typeorm/cli",
+    "migration:run": "yarn build && yarn typeorm:cli migration:run",
+    "migration:generate": "yarn typeorm:cli migration:generate",
     "clean": "rm -rf dist/ .nyc_output/",
     "check-outdated": "check-outdated --ignore-pre-releases"
   },
@@ -25,7 +28,9 @@
     "loglevel": "^1.7.0",
     "loglevel-plugin-prefix": "^0.8.4",
     "source-map-support": "^0.5.19",
-    "tslib": "^2.0.1"
+    "sqlite3": "^5.0.0",
+    "tslib": "^2.0.1",
+    "typeorm": "^0.2.25"
   },
   "devDependencies": {
     "@types/chai": "^4.2.12",

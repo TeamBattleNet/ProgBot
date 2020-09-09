@@ -39,6 +39,9 @@ dist/
 desktop.ini
 .direnv
 
+# Application Data
+runtime/
+
 # CI/CD (Docker only)
 .git
 .gitignore
