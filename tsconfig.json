@@ -23,6 +23,7 @@
     "experimentalDecorators": true,
     "allowUnreachableCode": false,
     "allowJs": false,
+    "sourceMap": true,
     "typeRoots": [
       "./node_modules/@types"
     ],

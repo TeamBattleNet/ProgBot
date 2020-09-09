@@ -19,13 +19,13 @@ describe('Chip', () => {
     let saveStub: SinonStub;
 
     beforeEach(() => {
-      mock({ 'fakeCSVFile': 'id,name,category,rarity,damage,element\n1,name,cat,2,3,elem'})
+      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,cat,2,3,elem' });
       saveStub = sandbox.stub();
       queryRunnerStub = {
         connection: {
-          createEntityManager: sandbox.stub().returns({ save: saveStub })
-        }
-      }
+          createEntityManager: sandbox.stub().returns({ save: saveStub }),
+        },
+      };
     });
 
     afterEach(() => {
@@ -45,43 +45,43 @@ describe('Chip', () => {
     });
 
     it('skips blank lines in csv gracefully', async () => {
-      mock({ 'fakeCSVFile': '\n\nid,name,category,rarity,damage,element\n\n\n1,name,cat,2,3,elem\n\n'})
+      mock({ fakeCSVFile: '\n\nid,name,category,rarity,damage,element\n\n\n1,name,cat,2,3,elem\n\n' });
       await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
       assert.calledOnce(saveStub);
     });
 
     it('rejects malformed csv when missing an item column', async () => {
-      mock({ 'fakeCSVFile': 'id,name,category,rarity,damage,element\n1,name,cat,2,3'})
+      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,cat,2,3' });
       try {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
         expect.fail('Did not throw');
       } catch (e) {} // eslint-disable-line no-empty
-    })
+    });
 
     it('rejects malformed csv when extra item column', async () => {
-      mock({ 'fakeCSVFile': 'id,name,category,rarity,damage,element\n1,name,cat,2,3,elem,extradata'})
+      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,cat,2,3,elem,extradata' });
       try {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
         expect.fail('Did not throw');
       } catch (e) {} // eslint-disable-line no-empty
-    })
+    });
 
     it('rejects malformed csv when number column does not parse correctly', async () => {
-      mock({ 'fakeCSVFile': 'id,name,category,rarity,damage,element\nnotNumber,name,cat,2,3,elem,extradata'})
+      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\nnotNumber,name,cat,2,3,elem,extradata' });
       try {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
         expect.fail('Did not throw');
       } catch (e) {} // eslint-disable-line no-empty
-      mock({ 'fakeCSVFile': 'id,name,category,rarity,damage,element\n1,name,cat,notNumber,3,elem,extradata'})
+      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,cat,notNumber,3,elem,extradata' });
       try {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
         expect.fail('Did not throw');
       } catch (e) {} // eslint-disable-line no-empty
-      mock({ 'fakeCSVFile': 'id,name,category,rarity,damage,element\n1,name,cat,2,notNumber,elem,extradata'})
+      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,cat,2,notNumber,elem,extradata' });
       try {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
         expect.fail('Did not throw');
       } catch (e) {} // eslint-disable-line no-empty
-    })
+    });
   });
 });

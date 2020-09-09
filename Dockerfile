@@ -8,11 +8,11 @@ COPY yarn.lock .
 RUN yarn --frozen-lockfile --non-interactive
 COPY . .
 # Build and trim node_modules dependencies
-RUN yarn build && mv yarnclean .yarnclean && yarn --frozen-lockfile --non-interactive --production
+RUN yarn build && mv yarnclean .yarnclean && yarn --frozen-lockfile --non-interactive --production && find dist/ -name '*.spec.js*' -exec rm {} +
 
 FROM base AS release
 ENV NODE_ENV production
-RUN chown -R 1000:1000 .
+RUN mkdir runtime && echo '{}' > runtime/config.json && chown -R 1000:1000 .
 COPY --from=builder --chown=1000:1000 /app/dist ./dist
 COPY --from=builder --chown=1000:1000 /app/node_modules ./node_modules
 COPY --from=builder --chown=1000:1000 /app/ormconfig.js ./ormconfig.js
