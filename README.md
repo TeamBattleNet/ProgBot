@@ -12,7 +12,9 @@ The schema of this configuration file is as follows:
 {
   "database": "runtime/progbot.db", // desired location of the sqlite3 db
   "http_bind": "0.0.0.0",
-  "http_port": 32043
+  "http_port": 32043,
+  "discord_token": "someTokenForADiscordBot",
+  "discord_bot_cmd_prefix": "!"
 }
 ```
 
