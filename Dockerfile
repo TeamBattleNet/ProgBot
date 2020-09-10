@@ -7,8 +7,10 @@ COPY package.json .
 COPY yarn.lock .
 RUN yarn --frozen-lockfile --non-interactive
 COPY . .
-# Build and trim node_modules dependencies
-RUN yarn build && mv yarnclean .yarnclean && yarn --frozen-lockfile --non-interactive --production && find dist/ -name '*.spec.js*' -exec rm {} +
+# Build app, trim node_modules dependencies, and remove tests
+RUN yarn build && \
+    mv yarnclean .yarnclean && yarn --frozen-lockfile --non-interactive --production && \
+    find dist/ -name '*.spec.js*' -exec rm {} +
 
 FROM base AS release
 ENV NODE_ENV production

@@ -1,6 +1,6 @@
 import { SinonSandbox, createSandbox, SinonStub, assert } from 'sinon';
 import { expect } from 'chai';
-import { Chip } from './chip';
+import { Chip } from '../models/chip';
 import mock from 'mock-fs';
 
 describe('Chip', () => {

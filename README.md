@@ -1,6 +1,6 @@
 # ProgBot 2.0
 
-This repository contains the source code for TeamBN's progbot.
+This repository contains the source code for TeamBN's progbot revival.
 
 ## Configuration
 
@@ -10,7 +10,9 @@ The schema of this configuration file is as follows:
 
 ```javascript
 {
-  "database": "runtime/progbot.db" // desired location of the sqlite3 db
+  "database": "runtime/progbot.db", // desired location of the sqlite3 db
+  "http_bind": "0.0.0.0",
+  "http_port": 32043
 }
 ```
 

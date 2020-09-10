@@ -1,12 +1,14 @@
 import 'source-map-support/register';
 import 'reflect-metadata'; // for TypeORM
 import { Database } from './clients/database';
+import { startWebserver, stopWebserver } from './listeners/webserver/server';
 import { getLogger } from './logger';
 const logger = getLogger('main');
 
 async function main() {
   logger.info('Starting progbot');
   await Database.initialize();
+  await startWebserver();
 }
 
 let stopSignalReceived = false;
@@ -19,6 +21,7 @@ async function shutdown() {
   logger.info('Shutting down - stop signal received');
   // Clean up and shutdown stuff here
   await Database.shutdown();
+  await stopWebserver();
   process.exit(0);
 }
 
