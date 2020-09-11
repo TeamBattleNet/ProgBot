@@ -1,6 +1,6 @@
 import discord from 'discord.js';
-import { Config } from '../../clients/configuration';
-import { getLogger } from '../../logger';
+import { Config } from '../../../clients/configuration';
+import { getLogger } from '../../../logger';
 
 const logger = getLogger('discord');
 
@@ -91,7 +91,7 @@ export class DiscordClient {
   }
 }
 
-singletonClient.on('ready', DiscordClient.nowReady.bind(DiscordClient));
-singletonClient.on('message', DiscordClient.handleMessage.bind(DiscordClient));
+singletonClient.on('ready', DiscordClient.nowReady);
+singletonClient.on('message', DiscordClient.handleMessage);
 singletonClient.on('rateLimit', (r) => logger.warn(`Rate limit: ${r}`));
 singletonClient.on('error', logger.error);

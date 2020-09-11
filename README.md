@@ -14,7 +14,13 @@ The schema of this configuration file is as follows:
   "http_bind": "0.0.0.0",
   "http_port": 32043,
   "discord_token": "someTokenForADiscordBot",
-  "discord_bot_cmd_prefix": "!"
+  "discord_bot_cmd_prefix": "!",
+  // for twitch auth details, view this for more info: https://d-fischer.github.io/twitch-chat-client/docs/examples/basic-bot.html
+  "twitch_app_client_id": "appClientID",
+  "twitch_app_client_secret": "appClientSecret",
+  "twitch_bot_access_token": "botOauthAccessToken",
+  "twitch_bot_refresh_token": "botOauthRefreshToken",
+  "twitch_bot_cmd_prefix": "!"
 }
 ```
 
