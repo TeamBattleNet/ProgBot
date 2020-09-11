@@ -16,18 +16,25 @@ const singletonClient = new ChatClient(
   }
 );
 
-// param is the parsed message content after trimming the prepended command.
+export type MsgHandler = (channel: string, user: string, message: string, param?: string) => Promise<string>;
+// param input in the handler is the parsed message content after trimming the prepended command.
 // Return the string content for replying to the message, or an empty string if a general reply is not desired.
-export type TwitchMessageHandler = (channel: string, user: string, message: string, param?: string) => Promise<string>;
+export interface TwitchCommand {
+  cmd: string;
+  shortDescription: string;
+  usageInfo: string;
+  handler: MsgHandler;
+}
 
 export class TwitchClient {
   public static client = singletonClient;
-  private static cmdPrefix = Config.getConfig().twitch_bot_cmd_prefix || '!';
+  public static cmdPrefix = Config.getConfig().twitch_bot_cmd_prefix || '!';
+  public static username = '';
   private static commands: {
     [cmd: string]: {
       desc: string;
       usage: string;
-      handler: TwitchMessageHandler;
+      handler: MsgHandler;
     };
   } = {};
 
@@ -36,8 +43,10 @@ export class TwitchClient {
   }
 
   public static async postRegistration() {
-    logger.info(`Twitch user ${TwitchClient.client.currentNick} logged into chat`);
-    // Join channels here or whatever
+    TwitchClient.username = TwitchClient.client.currentNick;
+    logger.info(`Twitch user ${TwitchClient.username} logged into chat`);
+    // Join channels here
+    await TwitchClient.client.join(`#${TwitchClient.username}`); // always join our own channel chat
   }
 
   public static async handleMessage(channel: string, user: string, message: string) {
@@ -47,18 +56,23 @@ export class TwitchClient {
       const param = sep === -1 ? undefined : message.substring(sep + 1).trim() || undefined;
       logger.trace(`cmd: '${cmd}' params: '${param}' channel: '${channel}' user: ${user}`);
       if (TwitchClient.commands[cmd]) {
-        const reply = await TwitchClient.commands[cmd].handler(channel, user, message, param);
-        if (reply) TwitchClient.client.say(channel, reply);
+        try {
+          const reply = await TwitchClient.commands[cmd].handler(channel, user, message, param);
+          if (reply) TwitchClient.client.say(channel, reply);
+        } catch (e) {
+          logger.error(e);
+          TwitchClient.client.say(channel, 'Internal Error');
+        }
       }
     }
   }
 
-  public static registerCommandHandler(cmd: string, shortDescription: string, usageInfo: string, handler: TwitchMessageHandler) {
-    if (TwitchClient.commands[cmd]) throw new Error(`Command handler for cmd ${cmd} already registered!`);
-    TwitchClient.commands[cmd] = {
-      desc: shortDescription,
-      usage: usageInfo,
-      handler: handler,
+  public static registerCommand(command: TwitchCommand) {
+    if (TwitchClient.commands[command.cmd]) throw new Error(`Command handler for cmd ${command.cmd} already registered!`);
+    TwitchClient.commands[command.cmd] = {
+      desc: command.shortDescription,
+      usage: command.usageInfo,
+      handler: command.handler,
     };
   }
 

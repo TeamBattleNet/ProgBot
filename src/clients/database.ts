@@ -1,7 +1,7 @@
 import { createConnection, getConnectionOptions, Connection } from 'typeorm';
 
 export class Database {
-  public static connection: Connection; // Only public for testing. Not to be used directly outside of this class
+  public static connection: Connection;
 
   // Must be called before other methods (on startup)
   public static async initialize() {

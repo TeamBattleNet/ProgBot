@@ -6,30 +6,29 @@ const logger = getLogger('discord');
 
 const singletonClient = new discord.Client();
 
-// param is the parsed message content after trimming the prepended command.
+export type MsgHandler = (msg: discord.Message, param?: string) => Promise<string>;
+// param input in the handler is the parsed message content after trimming the prepended command.
 // Return the string content for replying to the message, or an empty string if a general reply is not desired.
-export type DiscordMessageHandler = (msg: discord.Message, param?: string) => Promise<string>;
+export interface DiscordCommand {
+  cmd: string;
+  shortDescription: string;
+  usageInfo: string;
+  handler: MsgHandler;
+}
 
 export class DiscordClient {
   public static client = singletonClient;
-  private static cmdPrefix = Config.getConfig().discord_bot_cmd_prefix || '!';
+  public static cmdPrefix = Config.getConfig().discord_bot_cmd_prefix || '!';
   private static commands: {
     [cmd: string]: {
       desc: string;
       usage: string;
-      handler: DiscordMessageHandler;
+      handler: MsgHandler;
     };
   } = {};
 
   public static async connect() {
-    DiscordClient.registerCommandHandler(
-      'help',
-      'Get list of commands or help for a specific command (help [cmd])',
-      `usage: help [cmd]
-  help - list all commands with their descriptions
-  help [cmd] - get the description and usage information for [cmd]`,
-      DiscordClient.helpCommandHandler
-    );
+    DiscordClient.registerCommand(DiscordClient.helpCommand);
     await DiscordClient.client.login(Config.getConfig().discord_token);
     await DiscordClient.client.user?.setPresence({ activity: { type: 'PLAYING', name: `on the net - ${DiscordClient.cmdPrefix}help` } });
   }
@@ -51,39 +50,51 @@ export class DiscordClient {
           message.channel.startTyping().catch();
           typing = true;
         }, 100);
-        const reply = await DiscordClient.commands[cmd].handler(message, param);
-        clearTimeout(timeout);
-        if (reply) await message.channel.send(reply);
-        else if (typing) message.channel.stopTyping(true);
+        try {
+          const reply = await DiscordClient.commands[cmd].handler(message, param);
+          clearTimeout(timeout);
+          if (reply) await message.channel.send(reply);
+          else if (typing) message.channel.stopTyping(true);
+        } catch (e) {
+          logger.error(e);
+          await message.channel.send('Internal Error');
+        }
       }
     }
   }
 
-  public static registerCommandHandler(cmd: string, shortDescription: string, usageInfo: string, handler: DiscordMessageHandler) {
-    if (DiscordClient.commands[cmd]) throw new Error(`Command handler for cmd ${cmd} already registered!`);
-    DiscordClient.commands[cmd] = {
-      desc: shortDescription,
-      usage: usageInfo,
-      handler: handler,
+  public static registerCommand(command: DiscordCommand) {
+    if (DiscordClient.commands[command.cmd]) throw new Error(`Command handler for cmd ${command.cmd} already registered!`);
+    DiscordClient.commands[command.cmd] = {
+      desc: command.shortDescription,
+      usage: command.usageInfo,
+      handler: command.handler,
     };
   }
 
-  private static helpCommandHandler: DiscordMessageHandler = async (_msg, param) => {
-    if (param) {
-      // if help for a specific command
-      if (DiscordClient.commands[param]) {
-        return `\`\`\`${param} - ${DiscordClient.commands[param].desc}\n\n${DiscordClient.commands[param].usage}\`\`\``;
+  private static helpCommand: DiscordCommand = {
+    cmd: 'help',
+    shortDescription: 'Get list of commands or help for a specific command (help [cmd])',
+    usageInfo: `usage: help [cmd]
+  help - list all commands with their descriptions
+  help [cmd] - get the description and usage information for [cmd]`,
+    handler: async (_msg, param) => {
+      if (param) {
+        // if help for a specific command
+        if (DiscordClient.commands[param]) {
+          return `\`\`\`${param} - ${DiscordClient.commands[param].desc}\n\n${DiscordClient.commands[param].usage}\`\`\``;
+        } else {
+          return `Unknown command '${param}'`;
+        }
       } else {
-        return `Unknown command '${param}'`;
+        // no specific command specified, list all commands
+        let replyText = `\`\`\`Commands:\n\n`;
+        Object.entries(DiscordClient.commands).forEach(([cmd, data]) => {
+          replyText += `${DiscordClient.cmdPrefix}${cmd} - ${data.desc}\n`;
+        });
+        return replyText.trimEnd() + '```';
       }
-    } else {
-      // no specific command specified, list all commands
-      let replyText = `\`\`\`Commands:\n\n`;
-      Object.entries(DiscordClient.commands).forEach(([cmd, data]) => {
-        replyText += `${DiscordClient.cmdPrefix}${cmd} - ${data.desc}\n`;
-      });
-      return replyText.trimEnd() + '```';
-    }
+    },
   };
 
   public static async shutdown() {

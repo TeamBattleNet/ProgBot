@@ -37,14 +37,16 @@
     "twitch-auth": "^4.2.2",
     "twitch-chat-client": "^4.2.2",
     "typeorm": "^0.2.26",
-    "utf-8-validate": "^5.0.2"
+    "utf-8-validate": "^5.0.2",
+    "uuid": "^8.3.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.12",
     "@types/express": "^4.17.8",
     "@types/mocha": "^8.0.3",
-    "@types/node": "^12.12.57",
+    "@types/node": "^14.10.0",
     "@types/sinon": "^9.0.5",
+    "@types/uuid": "^8.3.0",
     "@types/ws": "^7.2.6",
     "@typescript-eslint/eslint-plugin": "^4.1.0",
     "@typescript-eslint/parser": "^4.1.0",

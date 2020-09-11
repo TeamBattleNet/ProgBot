@@ -1,8 +1,5 @@
-import fs from 'fs';
-import { promisify } from 'util';
+import { promises as fs } from 'fs';
 import { Entity, PrimaryColumn, Column, BaseEntity, QueryRunner } from 'typeorm';
-
-const readFileAsync = promisify(fs.readFile).bind(fs);
 
 const DEFAULT_CHIPS_CSV = 'chips/chips.csv';
 
@@ -29,7 +26,7 @@ export class Chip extends BaseEntity {
   // Can be used with migration file(s) via a provided queryRunner
   static async csvChipDBImport(queryRunner: QueryRunner, chipsCSVFile = DEFAULT_CHIPS_CSV) {
     // read in the csv
-    const csvFile: string = await readFileAsync(chipsCSVFile, 'utf8');
+    const csvFile: string = await fs.readFile(chipsCSVFile, 'utf8');
     // Parse the csv file into Chip entities
     let columns: string[] = [];
     const chips: Chip[] = [];

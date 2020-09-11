@@ -11,9 +11,12 @@ const logger = getLogger('main');
 async function main() {
   logger.info('Starting progbot');
   await Database.initialize();
+  logger.info('Starting api server');
   await startWebserver();
   initializeChatBotHandlers();
+  logger.info('Connecting to twitch');
   await TwitchClient.connect();
+  logger.info('Connecting to discord');
   await DiscordClient.connect();
 }
 
