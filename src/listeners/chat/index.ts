@@ -1,7 +1,7 @@
 import { registerCommonAnonymousCommand } from './shared/common';
 import * as accountLink from './shared/accountLink';
-import { DiscordClient } from './discord/bot';
-import { TwitchClient } from './twitch/bot';
+import { DiscordClient } from './discord/discordBot';
+import { TwitchClient } from './twitch/twitchBot';
 import { registerDiscord } from './discord/register';
 import { generateApiKey } from './discord/apiKey';
 import { registerTwitch } from './twitch/register';

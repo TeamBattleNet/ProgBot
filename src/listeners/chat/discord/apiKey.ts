@@ -1,8 +1,9 @@
-import { DiscordClient, DiscordCommand } from './bot';
+import { DiscordClient, DiscordCommand } from './discordBot';
 import { User } from '../../../models/user';
 
 export const generateApiKey: DiscordCommand = {
   cmd: 'generateapikey',
+  category: 'Accounts',
   shortDescription: "Create an api key (and revoke any existing ones) to use with ProgBot's http API",
   usageInfo: 'usage: generateapikey',
   handler: async (msg) => {

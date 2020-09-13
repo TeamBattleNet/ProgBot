@@ -2,8 +2,8 @@ import 'source-map-support/register';
 import 'reflect-metadata'; // for TypeORM
 import { Database } from './clients/database';
 import { startWebserver, stopWebserver } from './listeners/webserver/server';
-import { DiscordClient } from './listeners/chat/discord/bot';
-import { TwitchClient } from './listeners/chat/twitch/bot';
+import { DiscordClient } from './listeners/chat/discord/discordBot';
+import { TwitchClient } from './listeners/chat/twitch/twitchBot';
 import { initializeChatBotHandlers } from './listeners/chat';
 import { getLogger } from './logger';
 const logger = getLogger('main');

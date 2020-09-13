@@ -10,3 +10,5 @@ export interface ConfigFile {
   twitch_bot_refresh_token: string;
   twitch_bot_cmd_prefix: string;
 }
+
+export type CommandCategory = 'Accounts' | 'Help';

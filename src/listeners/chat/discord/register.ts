@@ -1,8 +1,9 @@
-import type { DiscordCommand } from './bot';
+import type { DiscordCommand } from './discordBot';
 import { User } from '../../../models/user';
 
 export const registerDiscord: DiscordCommand = {
   cmd: 'register',
+  category: 'Accounts',
   shortDescription: 'Register with ProgBot!',
   usageInfo: 'usage: register',
   handler: async (msg) => {

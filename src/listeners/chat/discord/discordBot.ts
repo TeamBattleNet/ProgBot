@@ -1,6 +1,7 @@
 import discord from 'discord.js';
 import { Config } from '../../../clients/configuration';
 import { getLogger } from '../../../logger';
+import type { CommandCategory } from '../../../types';
 
 const logger = getLogger('discord');
 
@@ -11,6 +12,7 @@ export type MsgHandler = (msg: discord.Message, param?: string) => Promise<strin
 // Return the string content for replying to the message, or an empty string if a general reply is not desired.
 export interface DiscordCommand {
   cmd: string;
+  category: CommandCategory;
   shortDescription: string;
   usageInfo: string;
   handler: MsgHandler;
@@ -21,6 +23,7 @@ export class DiscordClient {
   public static cmdPrefix = Config.getConfig().discord_bot_cmd_prefix || '!';
   private static commands: {
     [cmd: string]: {
+      category: CommandCategory;
       desc: string;
       usage: string;
       handler: MsgHandler;
@@ -66,6 +69,7 @@ export class DiscordClient {
   public static registerCommand(command: DiscordCommand) {
     if (DiscordClient.commands[command.cmd]) throw new Error(`Command handler for cmd ${command.cmd} already registered!`);
     DiscordClient.commands[command.cmd] = {
+      category: command.category,
       desc: command.shortDescription,
       usage: command.usageInfo,
       handler: command.handler,
@@ -74,6 +78,7 @@ export class DiscordClient {
 
   private static helpCommand: DiscordCommand = {
     cmd: 'help',
+    category: 'Help',
     shortDescription: 'Get list of commands or help for a specific command (help [cmd])',
     usageInfo: `usage: help [cmd]
   help - list all commands with their descriptions
@@ -88,9 +93,15 @@ export class DiscordClient {
         }
       } else {
         // no specific command specified, list all commands
-        let replyText = `\`\`\`Commands:\n\n`;
+        const cmdByCategory: {[index: string]: string[]} = {};
         Object.entries(DiscordClient.commands).forEach(([cmd, data]) => {
-          replyText += `${DiscordClient.cmdPrefix}${cmd} - ${data.desc}\n`;
+          if (!cmdByCategory[data.category]) cmdByCategory[data.category] = [];
+          cmdByCategory[data.category].push(`${DiscordClient.cmdPrefix}${cmd} - ${data.desc}`);
+        });
+        let replyText = `\`\`\`Commands:\n\n`;
+        Object.entries(cmdByCategory).forEach(([category, data]) => {
+          const separator = '\n  ';
+          replyText += `${category}:${separator}${data.join(separator)}\n`
         });
         return replyText.trimEnd() + '```';
       }

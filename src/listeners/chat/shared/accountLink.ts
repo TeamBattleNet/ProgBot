@@ -1,5 +1,5 @@
-import { DiscordClient, DiscordCommand } from '../discord/bot';
-import { TwitchClient, TwitchCommand } from '../twitch/bot';
+import { DiscordClient, DiscordCommand } from '../discord/discordBot';
+import { TwitchClient, TwitchCommand } from '../twitch/twitchBot';
 import { User } from '../../../models/user';
 
 const discordUsernameCheckRegex = /^.+?#\d{4}$/;
@@ -18,6 +18,7 @@ const successfullyLinkedMessage = 'Your discord and twitch accounts are now link
 
 export const startLinkDiscord: DiscordCommand = {
   cmd: startLinkCmd,
+  category: 'Accounts',
   shortDescription: startLinkDescription,
   usageInfo: `usage: startlink <twitchUsername>
   example: ${DiscordClient.cmdPrefix}startlink lansdad
@@ -35,6 +36,7 @@ export const startLinkDiscord: DiscordCommand = {
 
 export const startLinkTwitch: TwitchCommand = {
   cmd: startLinkCmd,
+  category: 'Accounts',
   shortDescription: startLinkDescription,
   usageInfo: `usage: startlink <discordUsername#1234>
   example: ${TwitchClient.cmdPrefix}startlink lansdad#1234
@@ -52,6 +54,7 @@ export const startLinkTwitch: TwitchCommand = {
 
 export const confirmLinkDiscord: DiscordCommand = {
   cmd: confirmLinkCmd,
+  category: 'Accounts',
   shortDescription: confirmLinkDescription,
   usageInfo: confirmLinkUsage,
   handler: async (msg, param) => {
@@ -67,6 +70,7 @@ export const confirmLinkDiscord: DiscordCommand = {
 
 export const confirmLinkTwitch: TwitchCommand = {
   cmd: confirmLinkCmd,
+  category: 'Accounts',
   shortDescription: confirmLinkDescription,
   usageInfo: confirmLinkUsage,
   handler: async (_chan, username, msg, param) => {

@@ -2,6 +2,7 @@ import { Config } from '../../../clients/configuration';
 import { getLogger } from '../../../logger';
 import { RefreshableAuthProvider, StaticAuthProvider } from 'twitch-auth';
 import { ChatClient } from 'twitch-chat-client';
+import type { CommandCategory } from '../../../types';
 
 const logger = getLogger('twitch');
 
@@ -21,6 +22,7 @@ export type MsgHandler = (channel: string, user: string, message: string, param?
 // Return the string content for replying to the message, or an empty string if a general reply is not desired.
 export interface TwitchCommand {
   cmd: string;
+  category: CommandCategory;
   shortDescription: string;
   usageInfo: string;
   handler: MsgHandler;
@@ -32,6 +34,7 @@ export class TwitchClient {
   public static username = '';
   private static commands: {
     [cmd: string]: {
+      category: CommandCategory;
       desc: string;
       usage: string;
       handler: MsgHandler;
@@ -47,6 +50,7 @@ export class TwitchClient {
     logger.info(`Twitch user ${TwitchClient.username} logged into chat`);
     // Join channels here
     await TwitchClient.client.join(`#${TwitchClient.username}`); // always join our own channel chat
+    logger.info(`Joined twitch channel #${TwitchClient.username}`);
   }
 
   public static async handleMessage(channel: string, user: string, message: string) {
@@ -70,6 +74,7 @@ export class TwitchClient {
   public static registerCommand(command: TwitchCommand) {
     if (TwitchClient.commands[command.cmd]) throw new Error(`Command handler for cmd ${command.cmd} already registered!`);
     TwitchClient.commands[command.cmd] = {
+      category: command.category,
       desc: command.shortDescription,
       usage: command.usageInfo,
       handler: command.handler,

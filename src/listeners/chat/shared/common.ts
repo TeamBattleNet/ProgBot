@@ -1,6 +1,7 @@
-import { DiscordClient, MsgHandler as DiscordMessageHandler } from '../discord/bot';
-import { TwitchClient, MsgHandler as TwitchMessageHandler } from '../twitch/bot';
+import { DiscordClient, MsgHandler as DiscordMessageHandler } from '../discord/discordBot';
+import { TwitchClient, MsgHandler as TwitchMessageHandler } from '../twitch/twitchBot';
 import { User } from '../../../models/user';
+import type { CommandCategory } from '../../../types';
 
 type chatType = 'twitch' | 'discord';
 type commonAnonymousMessageHandler = (chatType: chatType, param?: string) => Promise<string>;
@@ -9,6 +10,7 @@ type commonRegisteredMessageHandler = (chatType: chatType, user: User, param?: s
 // For chatbot commands that don't require being registered with progbot
 export interface CommonAnonymousCommand {
   cmd: string;
+  category: CommandCategory;
   shortDescription: string;
   usageInfo: string;
   handler: commonAnonymousMessageHandler;
@@ -17,6 +19,7 @@ export interface CommonAnonymousCommand {
 // For chatbot commands that require being registered with progbot (handler will get User object of caller)
 export interface CommonRegisteredCommand {
   cmd: string;
+  category: CommandCategory;
   shortDescription: string;
   usageInfo: string;
   handler: commonRegisteredMessageHandler;
@@ -25,12 +28,14 @@ export interface CommonRegisteredCommand {
 export function registerCommonAnonymousCommand(command: CommonAnonymousCommand) {
   DiscordClient.registerCommand({
     cmd: command.cmd,
+    category: command.category,
     shortDescription: command.shortDescription,
     usageInfo: command.usageInfo,
     handler: async (_msg, param) => command.handler('discord', param),
   });
   TwitchClient.registerCommand({
     cmd: command.cmd,
+    category: command.category,
     shortDescription: command.shortDescription,
     usageInfo: command.usageInfo,
     handler: async (_chan, _user, _msg, param) => command.handler('twitch', param),
@@ -40,12 +45,14 @@ export function registerCommonAnonymousCommand(command: CommonAnonymousCommand) 
 export function registerCommonRegisteredHandler(command: CommonRegisteredCommand) {
   DiscordClient.registerCommand({
     cmd: command.cmd,
+    category: command.category,
     shortDescription: command.shortDescription,
     usageInfo: command.usageInfo,
     handler: discordMessageWrapper(command.handler),
   });
   TwitchClient.registerCommand({
     cmd: command.cmd,
+    category: command.category,
     shortDescription: command.shortDescription,
     usageInfo: command.usageInfo,
     handler: twitchMessageWrapper(command.handler),

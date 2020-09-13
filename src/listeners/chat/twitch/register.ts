@@ -1,8 +1,9 @@
-import type { TwitchCommand } from './bot';
+import type { TwitchCommand } from './twitchBot';
 import { User } from '../../../models/user';
 
 export const registerTwitch: TwitchCommand = {
   cmd: 'register',
+  category: 'Accounts',
   shortDescription: 'Register with ProgBot!',
   usageInfo: 'usage: register',
   handler: async (_chan, user) => {
