@@ -13,7 +13,7 @@ async function main() {
   await Database.initialize();
   logger.info('Starting api server');
   await startWebserver();
-  initializeChatBotHandlers();
+  await initializeChatBotHandlers();
   logger.info('Connecting to twitch');
   await TwitchClient.connect();
   logger.info('Connecting to discord');

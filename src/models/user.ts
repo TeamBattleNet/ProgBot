@@ -17,7 +17,7 @@ export class User extends BaseEntity {
 
   @Column({ unique: true })
   @Generated('uuid') // if not defined, random useless uuid is used (for uniqueness)
-  twitchUsername: string;
+  twitchUserId: string;
 
   @Column({ unique: true })
   @Generated('uuid') // if not defined, random useless uuid is used (for uniqueness)
@@ -50,8 +50,8 @@ export class User extends BaseEntity {
     return User.findOne({ where: { discordUserId: discordId } });
   }
 
-  public static async findByTwitchUsername(twitchUsername: string) {
-    return User.findOne({ where: { twitchUsername } });
+  public static async findByTwitchUserId(twitchUserId: string) {
+    return User.findOne({ where: { twitchUserId } });
   }
 
   public static async findByLinkToken(username: string, randomToken: string) {
@@ -60,7 +60,7 @@ export class User extends BaseEntity {
 
   public static async linkAccounts(twitchUser: User, discordUser: User) {
     const combinedUser = new User();
-    combinedUser.twitchUsername = twitchUser.twitchUsername;
+    combinedUser.twitchUserId = twitchUser.twitchUserId;
     combinedUser.discordUserId = discordUser.discordUserId;
     // Combine any other properties (i.e. owned chips) here
     combinedUser.userClass = pickHigherUserClass(twitchUser.userClass, discordUser.userClass);

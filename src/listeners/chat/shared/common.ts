@@ -2,10 +2,19 @@ import { DiscordClient, MsgHandler as DiscordMessageHandler } from '../discord/d
 import { TwitchClient, MsgHandler as TwitchMessageHandler } from '../twitch/twitchBot';
 import { User } from '../../../models/user';
 import type { CommandCategory } from '../../../types';
+import type { PrivateMessage as TwitchMessage } from 'twitch-chat-client';
+import type { Message as DiscordMessage } from 'discord.js';
 
-type chatType = 'twitch' | 'discord';
-type commonAnonymousMessageHandler = (chatType: chatType, param?: string) => Promise<string>;
-type commonRegisteredMessageHandler = (chatType: chatType, user: User, param?: string) => Promise<string>;
+// If chat type is twitch, twitchMsg will be defined
+// If chat type is discord, discordMsg will be defined
+interface ChatContext {
+  chatType: 'twitch' | 'discord';
+  twitchMsg?: TwitchMessage;
+  discordMsg?: DiscordMessage;
+}
+
+type commonAnonymousMessageHandler = (chatContext: ChatContext, param?: string) => Promise<string>;
+type commonRegisteredMessageHandler = (chatContext: ChatContext, user: User, param?: string) => Promise<string>;
 
 // For chatbot commands that don't require being registered with progbot
 export interface CommonAnonymousCommand {
@@ -31,18 +40,18 @@ export function registerCommonAnonymousCommand(command: CommonAnonymousCommand) 
     category: command.category,
     shortDescription: command.shortDescription,
     usageInfo: command.usageInfo,
-    handler: async (_msg, param) => command.handler('discord', param),
+    handler: async (msg, param) => command.handler({ chatType: 'discord', discordMsg: msg }, param),
   });
   TwitchClient.registerCommand({
     cmd: command.cmd,
     category: command.category,
     shortDescription: command.shortDescription,
     usageInfo: command.usageInfo,
-    handler: async (_chan, _user, _msg, param) => command.handler('twitch', param),
+    handler: async (msg, param) => command.handler({ chatType: 'twitch', twitchMsg: msg }, param),
   });
 }
 
-export function registerCommonRegisteredHandler(command: CommonRegisteredCommand) {
+export function registerCommonRegisteredCommand(command: CommonRegisteredCommand) {
   DiscordClient.registerCommand({
     cmd: command.cmd,
     category: command.category,
@@ -63,14 +72,16 @@ function discordMessageWrapper(handler: commonRegisteredMessageHandler): Discord
   return async (msg, param) => {
     const user = await User.findByDiscordId(msg.author.id);
     if (!user) return `You must be registered to use this function. Try ${DiscordClient.cmdPrefix}register first`;
-    return handler('discord', user, param);
+    return handler({ chatType: 'discord', discordMsg: msg }, user, param);
   };
 }
 
 function twitchMessageWrapper(handler: commonRegisteredMessageHandler): TwitchMessageHandler {
-  return async (_chan, username, _msg, param) => {
-    const user = await User.findByTwitchUsername(username);
+  return async (msg, param) => {
+    const userId = msg.userInfo.userId;
+    if (!userId) throw new Error(`Couldn't find twitch user id for message by ${msg.userInfo.userName}`);
+    const user = await User.findByTwitchUserId(userId);
     if (!user) return `You must be registered to use this function. Try ${TwitchClient.cmdPrefix}register first`;
-    return handler('twitch', user, param);
+    return handler({ chatType: 'twitch', twitchMsg: msg }, user, param);
   };
 }

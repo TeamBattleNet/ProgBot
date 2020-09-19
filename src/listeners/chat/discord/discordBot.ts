@@ -1,4 +1,5 @@
 import discord from 'discord.js';
+import { parseCmdAndParam } from '../shared/utils';
 import { Config } from '../../../clients/configuration';
 import { getLogger } from '../../../logger';
 import type { CommandCategory } from '../../../types';
@@ -42,9 +43,7 @@ export class DiscordClient {
 
   public static async handleMessage(message: discord.Message) {
     if (message.content.startsWith(DiscordClient.cmdPrefix)) {
-      const sep = message.content.indexOf(' ');
-      const cmd = message.content.substring(DiscordClient.cmdPrefix.length, sep === -1 ? undefined : sep);
-      const param = sep === -1 ? undefined : message.content.substring(sep + 1).trim() || undefined;
+      const { cmd, param } = parseCmdAndParam(DiscordClient.cmdPrefix, message.content);
       logger.trace(`cmd: '${cmd}' params: '${param}' user: ${message.member?.user.username}#${message.member?.user.discriminator}`);
       if (DiscordClient.commands[cmd]) {
         // Start typing if reply takes time to generate (over 100ms)
@@ -93,15 +92,15 @@ export class DiscordClient {
         }
       } else {
         // no specific command specified, list all commands
-        const cmdByCategory: {[index: string]: string[]} = {};
+        const cmdHelpByCategory: { [index: string]: string[] } = {};
         Object.entries(DiscordClient.commands).forEach(([cmd, data]) => {
-          if (!cmdByCategory[data.category]) cmdByCategory[data.category] = [];
-          cmdByCategory[data.category].push(`${DiscordClient.cmdPrefix}${cmd} - ${data.desc}`);
+          if (!cmdHelpByCategory[data.category]) cmdHelpByCategory[data.category] = [];
+          cmdHelpByCategory[data.category].push(`${DiscordClient.cmdPrefix}${cmd} - ${data.desc}`);
         });
         let replyText = `\`\`\`Commands:\n\n`;
-        Object.entries(cmdByCategory).forEach(([category, data]) => {
+        Object.entries(cmdHelpByCategory).forEach(([category, data]) => {
           const separator = '\n  ';
-          replyText += `${category}:${separator}${data.join(separator)}\n`
+          replyText += `${category}:${separator}${data.join(separator)}\n`;
         });
         return replyText.trimEnd() + '```';
       }

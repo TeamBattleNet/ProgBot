@@ -6,12 +6,14 @@ export const registerTwitch: TwitchCommand = {
   category: 'Accounts',
   shortDescription: 'Register with ProgBot!',
   usageInfo: 'usage: register',
-  handler: async (_chan, user) => {
-    const existingUser = await User.findByTwitchUsername(user);
-    if (existingUser) return `${user}: You are already registered!`;
+  handler: async (msg) => {
+    const userId = msg.userInfo.userId;
+    if (!userId) throw new Error(`Couldn't find twitch user id for message by ${msg.userInfo.userName}`);
+    const existingUser = await User.findByTwitchUserId(userId);
+    if (existingUser) return `${msg.userInfo.userName}: You are already registered!`;
     const newUser = new User();
-    newUser.twitchUsername = user;
+    newUser.twitchUserId = userId;
     await newUser.save();
-    return `${user}: You are now registered!`;
+    return `${msg.userInfo.userName}: You are now registered!`;
   },
 };

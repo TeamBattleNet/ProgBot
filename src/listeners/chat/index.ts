@@ -1,4 +1,4 @@
-import { registerCommonAnonymousCommand } from './shared/common';
+import { registerCommonAnonymousCommand, registerCommonRegisteredCommand } from './shared/common';
 import * as accountLink from './shared/accountLink';
 import { DiscordClient } from './discord/discordBot';
 import { TwitchClient } from './twitch/twitchBot';
@@ -6,15 +6,26 @@ import { registerDiscord } from './discord/register';
 import { generateApiKey } from './discord/apiKey';
 import { registerTwitch } from './twitch/register';
 import { ping } from './shared/ping';
+import { getAllStaticCommands } from './shared/staticCommands';
+import { quote } from './shared/quote';
+import { literally } from './shared/literally';
 
-export function initializeChatBotHandlers() {
+export async function initializeChatBotHandlers() {
+  // Help
   registerCommonAnonymousCommand(ping);
+
+  // General
+  registerCommonAnonymousCommand(quote);
+  registerCommonAnonymousCommand(literally);
+
+  // Static
+  (await getAllStaticCommands()).forEach(registerCommonAnonymousCommand);
+
+  // Accounts
   DiscordClient.registerCommand(generateApiKey);
   // cannot whisper with twitch bots right now, so we can't privately send api keys to users in twitch Ref: https://github.com/tmijs/tmi.js/issues/333
   DiscordClient.registerCommand(registerDiscord);
   TwitchClient.registerCommand(registerTwitch);
-  DiscordClient.registerCommand(accountLink.startLinkDiscord);
-  TwitchClient.registerCommand(accountLink.startLinkTwitch);
-  DiscordClient.registerCommand(accountLink.confirmLinkDiscord);
-  TwitchClient.registerCommand(accountLink.confirmLinkTwitch);
+  registerCommonRegisteredCommand(accountLink.startLinkCommon);
+  registerCommonRegisteredCommand(accountLink.confirmLinkCommon);
 }

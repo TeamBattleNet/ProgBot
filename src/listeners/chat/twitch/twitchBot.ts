@@ -1,7 +1,8 @@
+import { parseCmdAndParam } from '../shared/utils';
 import { Config } from '../../../clients/configuration';
 import { getLogger } from '../../../logger';
 import { RefreshableAuthProvider, StaticAuthProvider } from 'twitch-auth';
-import { ChatClient } from 'twitch-chat-client';
+import { ChatClient, PrivateMessage } from 'twitch-chat-client';
 import type { CommandCategory } from '../../../types';
 
 const logger = getLogger('twitch');
@@ -17,7 +18,7 @@ const singletonClient = new ChatClient(
   }
 );
 
-export type MsgHandler = (channel: string, user: string, message: string, param?: string) => Promise<string>;
+export type MsgHandler = (msg: PrivateMessage, param?: string) => Promise<string>;
 // param input in the handler is the parsed message content after trimming the prepended command.
 // Return the string content for replying to the message, or an empty string if a general reply is not desired.
 export interface TwitchCommand {
@@ -53,19 +54,17 @@ export class TwitchClient {
     logger.info(`Joined twitch channel #${TwitchClient.username}`);
   }
 
-  public static async handleMessage(channel: string, user: string, message: string) {
+  public static async handleMessage(_chan: string, _user: string, message: string, msg: PrivateMessage) {
     if (message.startsWith(TwitchClient.cmdPrefix)) {
-      const sep = message.indexOf(' ');
-      const cmd = message.substring(TwitchClient.cmdPrefix.length, sep === -1 ? undefined : sep);
-      const param = sep === -1 ? undefined : message.substring(sep + 1).trim() || undefined;
-      logger.trace(`cmd: '${cmd}' params: '${param}' channel: '${channel}' user: ${user}`);
+      const { cmd, param } = parseCmdAndParam(TwitchClient.cmdPrefix, message);
+      logger.trace(`cmd: '${cmd}' params: '${param}' channel: '${msg.target.value}' user: ${msg.userInfo.userName}`);
       if (TwitchClient.commands[cmd]) {
         try {
-          const reply = await TwitchClient.commands[cmd].handler(channel, user, message, param);
-          if (reply) TwitchClient.client.say(channel, reply);
+          const reply = await TwitchClient.commands[cmd].handler(msg, param);
+          if (reply) TwitchClient.client.say(msg.target.value, reply);
         } catch (e) {
           logger.error(e);
-          TwitchClient.client.say(channel, 'Internal Error');
+          TwitchClient.client.say(msg.target.value, 'Internal Error');
         }
       }
     }
