@@ -80,6 +80,14 @@ export class TwitchClient {
     };
   }
 
+  public static doesCommandExist(cmd: string) {
+    return Boolean(TwitchClient.commands[cmd]);
+  }
+
+  public static removeCommand(cmd: string) {
+    delete TwitchClient.commands[cmd];
+  }
+
   public static async shutdown() {
     await TwitchClient.client.quit();
   }

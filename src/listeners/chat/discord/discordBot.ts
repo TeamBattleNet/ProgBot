@@ -75,6 +75,14 @@ export class DiscordClient {
     };
   }
 
+  public static doesCommandExist(cmd: string) {
+    return Boolean(DiscordClient.commands[cmd]);
+  }
+
+  public static removeCommand(cmd: string) {
+    delete DiscordClient.commands[cmd];
+  }
+
   private static helpCommand: DiscordCommand = {
     cmd: 'help',
     category: 'Help',
@@ -97,10 +105,11 @@ export class DiscordClient {
           if (!cmdHelpByCategory[data.category]) cmdHelpByCategory[data.category] = [];
           cmdHelpByCategory[data.category].push(`${DiscordClient.cmdPrefix}${cmd} - ${data.desc}`);
         });
-        let replyText = `\`\`\`Commands:\n\n`;
+        let replyText = `\`\`\`Commands:\n`;
+        const separator = '\n  ';
         Object.entries(cmdHelpByCategory).forEach(([category, data]) => {
-          const separator = '\n  ';
-          replyText += `${category}:${separator}${data.join(separator)}\n`;
+          // Filter 'Static' and 'Admin' commands from help display
+          if (category !== 'Static' && category !== 'Admin') replyText += `\n${category}:${separator}${data.join(separator)}\n`;
         });
         return replyText.trimEnd() + '```';
       }

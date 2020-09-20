@@ -11,4 +11,4 @@ export interface ConfigFile {
   twitch_bot_cmd_prefix: string;
 }
 
-export type CommandCategory = 'Accounts' | 'Help' | 'General' | 'Static';
+export type CommandCategory = 'Accounts' | 'Help' | 'General' | 'Static' | 'Admin';

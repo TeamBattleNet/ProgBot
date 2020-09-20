@@ -11,4 +11,8 @@ export class StaticCommand extends BaseEntity {
   public static async getAllCommands() {
     return StaticCommand.find();
   }
+
+  public static async getByCmd(cmd: string) {
+    return StaticCommand.findOne({ where: { cmd } });
+  }
 }

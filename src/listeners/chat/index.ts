@@ -1,4 +1,4 @@
-import { registerCommonAnonymousCommand, registerCommonRegisteredCommand } from './shared/common';
+import { registerCommonAnonymousCommand, registerCommonRegisteredCommand, registerCommonAdminCommand } from './shared/common';
 import * as accountLink from './shared/accountLink';
 import { DiscordClient } from './discord/discordBot';
 import { TwitchClient } from './twitch/twitchBot';
@@ -6,7 +6,7 @@ import { registerDiscord } from './discord/register';
 import { generateApiKey } from './discord/apiKey';
 import { registerTwitch } from './twitch/register';
 import { ping } from './shared/ping';
-import { getAllStaticCommands } from './shared/staticCommands';
+import { getAllStaticCommands, addStaticCommand, removeStaticCommand } from './shared/staticCommands';
 import { quote } from './shared/quote';
 import { literally } from './shared/literally';
 import { blame } from './shared/blame';
@@ -22,6 +22,8 @@ export async function initializeChatBotHandlers() {
 
   // Static
   (await getAllStaticCommands()).forEach(registerCommonAnonymousCommand);
+  registerCommonAdminCommand(addStaticCommand);
+  registerCommonAdminCommand(removeStaticCommand);
 
   // Accounts
   DiscordClient.registerCommand(generateApiKey);

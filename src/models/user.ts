@@ -33,6 +33,10 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   linkToken?: string;
 
+  public isAdmin() {
+    return this.userClass === 'admin';
+  }
+
   public async getNewApiKey() {
     this.apiKey = uuidv4();
     await this.save();

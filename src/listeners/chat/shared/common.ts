@@ -7,7 +7,7 @@ import type { Message as DiscordMessage } from 'discord.js';
 
 // If chat type is twitch, twitchMsg will be defined
 // If chat type is discord, discordMsg will be defined
-interface ChatContext {
+export interface ChatContext {
   chatType: 'twitch' | 'discord';
   twitchMsg?: TwitchMessage;
   discordMsg?: DiscordMessage;
@@ -29,6 +29,15 @@ export interface CommonAnonymousCommand {
 export interface CommonRegisteredCommand {
   cmd: string;
   category: CommandCategory;
+  shortDescription: string;
+  usageInfo: string;
+  handler: commonRegisteredMessageHandler;
+}
+
+// For chatbot commands that require being an admin of progbot (handler will get User object of caller)
+export interface CommonAdminCommand {
+  cmd: string;
+  // No category because all admin commands will be considered category 'Admin'
   shortDescription: string;
   usageInfo: string;
   handler: commonRegisteredMessageHandler;
@@ -57,31 +66,50 @@ export function registerCommonRegisteredCommand(command: CommonRegisteredCommand
     category: command.category,
     shortDescription: command.shortDescription,
     usageInfo: command.usageInfo,
-    handler: discordMessageWrapper(command.handler),
+    handler: discordMessageWrapper(command.handler, false),
   });
   TwitchClient.registerCommand({
     cmd: command.cmd,
     category: command.category,
     shortDescription: command.shortDescription,
     usageInfo: command.usageInfo,
-    handler: twitchMessageWrapper(command.handler),
+    handler: twitchMessageWrapper(command.handler, false),
   });
 }
 
-function discordMessageWrapper(handler: commonRegisteredMessageHandler): DiscordMessageHandler {
+export function registerCommonAdminCommand(command: CommonAdminCommand) {
+  DiscordClient.registerCommand({
+    cmd: command.cmd,
+    category: 'Admin',
+    shortDescription: command.shortDescription,
+    usageInfo: command.usageInfo,
+    handler: discordMessageWrapper(command.handler, true),
+  });
+  TwitchClient.registerCommand({
+    cmd: command.cmd,
+    category: 'Admin',
+    shortDescription: command.shortDescription,
+    usageInfo: command.usageInfo,
+    handler: twitchMessageWrapper(command.handler, true),
+  });
+}
+
+function discordMessageWrapper(handler: commonRegisteredMessageHandler, adminRequired: boolean): DiscordMessageHandler {
   return async (msg, param) => {
     const user = await User.findByDiscordId(msg.author.id);
     if (!user) return `You must be registered to use this function. Try ${DiscordClient.cmdPrefix}register first`;
+    if (adminRequired && !user.isAdmin()) return 'Permission denied';
     return handler({ chatType: 'discord', discordMsg: msg }, user, param);
   };
 }
 
-function twitchMessageWrapper(handler: commonRegisteredMessageHandler): TwitchMessageHandler {
+function twitchMessageWrapper(handler: commonRegisteredMessageHandler, adminRequired: boolean): TwitchMessageHandler {
   return async (msg, param) => {
     const userId = msg.userInfo.userId;
     if (!userId) throw new Error(`Couldn't find twitch user id for message by ${msg.userInfo.userName}`);
     const user = await User.findByTwitchUserId(userId);
     if (!user) return `You must be registered to use this function. Try ${TwitchClient.cmdPrefix}register first`;
+    if (adminRequired && !user.isAdmin()) return 'Permission denied';
     return handler({ chatType: 'twitch', twitchMsg: msg }, user, param);
   };
 }
