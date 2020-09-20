@@ -9,6 +9,7 @@ import { ping } from './shared/ping';
 import { getAllStaticCommands } from './shared/staticCommands';
 import { quote } from './shared/quote';
 import { literally } from './shared/literally';
+import { blame } from './shared/blame';
 
 export async function initializeChatBotHandlers() {
   // Help
@@ -17,6 +18,7 @@ export async function initializeChatBotHandlers() {
   // General
   registerCommonAnonymousCommand(quote);
   registerCommonAnonymousCommand(literally);
+  registerCommonAnonymousCommand(blame);
 
   // Static
   (await getAllStaticCommands()).forEach(registerCommonAnonymousCommand);
