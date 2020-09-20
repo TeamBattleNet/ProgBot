@@ -1,7 +1,7 @@
 import { Entity, PrimaryColumn, Column, BaseEntity } from 'typeorm';
 
 @Entity()
-export class StaticCommand extends BaseEntity {
+export class SimpleCommand extends BaseEntity {
   @PrimaryColumn()
   cmd: string;
 
@@ -9,10 +9,10 @@ export class StaticCommand extends BaseEntity {
   reply: string;
 
   public static async getAllCommands() {
-    return StaticCommand.find();
+    return SimpleCommand.find();
   }
 
   public static async getByCmd(cmd: string) {
-    return StaticCommand.findOne({ where: { cmd } });
+    return SimpleCommand.findOne({ where: { cmd } });
   }
 }

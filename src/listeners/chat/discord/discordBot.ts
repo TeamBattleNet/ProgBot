@@ -108,8 +108,8 @@ export class DiscordClient {
         let replyText = `\`\`\`Commands:\n`;
         const separator = '\n  ';
         Object.entries(cmdHelpByCategory).forEach(([category, data]) => {
-          // Filter 'Static' and 'Admin' commands from help display
-          if (category !== 'Static' && category !== 'Admin') replyText += `\n${category}:${separator}${data.join(separator)}\n`;
+          // Filter 'Simple' and 'Admin' commands from help display
+          if (category !== 'Simple' && category !== 'Admin') replyText += `\n${category}:${separator}${data.join(separator)}\n`;
         });
         return replyText.trimEnd() + '```';
       }

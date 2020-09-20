@@ -14,6 +14,7 @@ export const startLinkCommon: CommonRegisteredCommand = {
 
   This will provide a token which you must then use from your other (twitch/discord) account to finish the link`,
   handler: async (ctx, user, param) => {
+    if (user.hasTwitchId() && user.hasDiscordId()) return 'You have already linked your twitch and discord accounts!';
     const otherService = ctx.chatType === 'twitch' ? 'discord' : 'twitch';
     const cmdPrefix = ctx.chatType === 'twitch' ? TwitchClient.cmdPrefix : DiscordClient.cmdPrefix;
     const providedUsername = param?.toLowerCase() || '';
@@ -37,6 +38,7 @@ export const confirmLinkCommon: CommonRegisteredCommand = {
 
   If the link is valid and you are using the account specified when starting the link, your accounts will be combined`,
   handler: async (ctx, user, param) => {
+    if (user.hasTwitchId() && user.hasDiscordId()) return 'This account is already linked and cannot be re-linked!';
     const otherService = ctx.chatType === 'twitch' ? 'discord' : 'twitch';
     const cmdPrefix = ctx.chatType === 'twitch' ? TwitchClient.cmdPrefix : DiscordClient.cmdPrefix;
     if (!param) return `You must specify the token provided when starting the link from ${otherService} (${cmdPrefix}help confirmlink)`;

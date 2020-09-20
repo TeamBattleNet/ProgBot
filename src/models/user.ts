@@ -2,6 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, Generated, BaseEntity } from 't
 import { Database } from '../clients/database';
 import { v4 as uuidv4 } from 'uuid';
 
+const isUUID = /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i;
+
 export type UserClass = 'user' | 'admin';
 // Used when combining accounts to determine and keep the 'higher ranked' user class
 const userClassRank: UserClass[] = ['user', 'admin'];
@@ -35,6 +37,14 @@ export class User extends BaseEntity {
 
   public isAdmin() {
     return this.userClass === 'admin';
+  }
+
+  public hasTwitchId() {
+    return !this.twitchUserId.match(isUUID);
+  }
+
+  public hasDiscordId() {
+    return !this.discordUserId.match(isUUID);
   }
 
   public async getNewApiKey() {
