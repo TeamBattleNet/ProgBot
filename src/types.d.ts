@@ -12,3 +12,6 @@ export interface ConfigFile {
 }
 
 export type CommandCategory = 'Accounts' | 'Help' | 'General' | 'Static' | 'Admin';
+
+export type ChipElement = 'none' | 'aqua' | 'wind' | 'elec' | 'wood' | 'fire' | 'obj' | 'recov' | 'break' | 'sword' | 'invis' | 'num' | 'search' | 'ground';
+export type ChipCategory = 'std' | 'mega' | 'navi' | 'giga' | 'dark';

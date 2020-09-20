@@ -7,20 +7,24 @@ export class Base1000000000000 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `CREATE TABLE "chip" ("id" integer PRIMARY KEY NOT NULL, "name" varchar NOT NULL, "category" varchar NOT NULL, "rarity" integer NOT NULL, "damage" integer NOT NULL, "element" varchar NOT NULL)`
+      `CREATE TABLE "chip" ("id" integer PRIMARY KEY NOT NULL, "name" varchar COLLATE NOCASE NOT NULL, "category" varchar NOT NULL, "rarity" integer NOT NULL, "damage" integer NOT NULL, "element" varchar NOT NULL)`
     );
+    await queryRunner.query(`CREATE TABLE "literally" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "what" varchar COLLATE NOCASE NOT NULL, "clip" varchar NOT NULL)`);
     await queryRunner.query(
-      `CREATE TABLE "user" ("id" varchar PRIMARY KEY NOT NULL, "twitchUsername" varchar NOT NULL, "discordUserId" varchar NOT NULL, "apiKey" varchar NOT NULL, "userClass" varchar NOT NULL DEFAULT ('user'), "linkToken" varchar, CONSTRAINT "UQ_e9c038972a5d1beb82ac038c904" UNIQUE ("twitchUsername"), CONSTRAINT "UQ_eab11953198745b2e03be12ee56" UNIQUE ("discordUserId"), CONSTRAINT "UQ_b3c53c577ce390cb3a4550e6d9d" UNIQUE ("apiKey"))`
+      `CREATE TABLE "quote" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "user" varchar COLLATE NOCASE NOT NULL, "quote" varchar COLLATE NOCASE NOT NULL, "date" varchar NOT NULL DEFAULT (''))`
     );
+    await queryRunner.query(`CREATE TABLE "static_command" ("cmd" varchar PRIMARY KEY NOT NULL, "reply" varchar NOT NULL)`);
     await queryRunner.query(
-      `CREATE TABLE "query-result-cache" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "identifier" varchar, "time" bigint NOT NULL, "duration" integer NOT NULL, "query" text NOT NULL, "result" text NOT NULL)`
+      `CREATE TABLE "user" ("id" varchar PRIMARY KEY NOT NULL, "twitchUserId" varchar NOT NULL, "discordUserId" varchar NOT NULL, "apiKey" varchar NOT NULL, "userClass" varchar NOT NULL DEFAULT ('user'), "linkToken" varchar, CONSTRAINT "UQ_912aa652018d98bd65940b50530" UNIQUE ("twitchUserId"), CONSTRAINT "UQ_eab11953198745b2e03be12ee56" UNIQUE ("discordUserId"), CONSTRAINT "UQ_b3c53c577ce390cb3a4550e6d9d" UNIQUE ("apiKey"))`
     );
     await Chip.csvChipDBImport(queryRunner);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP TABLE "query-result-cache"`);
     await queryRunner.query(`DROP TABLE "user"`);
+    await queryRunner.query(`DROP TABLE "static_command"`);
+    await queryRunner.query(`DROP TABLE "quote"`);
+    await queryRunner.query(`DROP TABLE "literally"`);
     await queryRunner.query(`DROP TABLE "chip"`);
   }
 }

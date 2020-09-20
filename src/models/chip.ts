@@ -1,18 +1,22 @@
 import { promises as fs } from 'fs';
 import { Entity, PrimaryColumn, Column, BaseEntity, QueryRunner } from 'typeorm';
+import type { ChipElement, ChipCategory } from '../types';
 
 const DEFAULT_CHIPS_CSV = 'chips/chips.csv';
+
+const VALID_CHIP_ELEMENTS = new Set<ChipElement>(['aqua', 'break', 'elec', 'fire', 'ground', 'invis', 'none', 'num', 'obj', 'recov', 'search', 'sword', 'wind', 'wood']);
+const VALID_CHIP_CATEGORIES = new Set<ChipCategory>(['std', 'mega', 'navi', 'giga', 'dark']);
 
 @Entity()
 export class Chip extends BaseEntity {
   @PrimaryColumn()
   id: number;
 
-  @Column()
+  @Column({ collation: 'NOCASE' })
   name: string;
 
   @Column()
-  category: string;
+  category: ChipCategory;
 
   @Column()
   rarity: number;
@@ -21,7 +25,7 @@ export class Chip extends BaseEntity {
   damage: number;
 
   @Column()
-  element: string;
+  element: ChipElement;
 
   // Can be used with migration file(s) via a provided queryRunner
   static async csvChipDBImport(queryRunner: QueryRunner, chipsCSVFile = DEFAULT_CHIPS_CSV) {
@@ -56,10 +60,10 @@ export class Chip extends BaseEntity {
   private importCSVProperty(csvColumnName: string, item: string) {
     if (csvColumnName === 'id') this.id = Number(item);
     else if (csvColumnName === 'name') this.name = item;
-    else if (csvColumnName === 'category') this.category = item;
+    else if (csvColumnName === 'category') this.category = item as ChipCategory;
     else if (csvColumnName === 'rarity') this.rarity = Number(item);
     else if (csvColumnName === 'damage') this.damage = Number(item);
-    else if (csvColumnName === 'element') this.element = item;
+    else if (csvColumnName === 'element') this.element = item as ChipElement;
     else throw new Error(`Unknown csv column name ${csvColumnName}`);
   }
 
@@ -70,11 +74,13 @@ export class Chip extends BaseEntity {
       isNaN(this.id) ||
       !this.name ||
       !this.category ||
+      !VALID_CHIP_CATEGORIES.has(this.category) ||
       this.rarity === undefined ||
       isNaN(this.rarity) ||
       this.damage === undefined ||
       isNaN(this.damage) ||
-      !this.element
+      !this.element ||
+      !VALID_CHIP_ELEMENTS.has(this.element)
     )
       throw new Error(`Chip id ${this.id} from csv import contains missing or malformed properties`);
   }
