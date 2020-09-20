@@ -1,10 +1,12 @@
 import { ChatContext } from './common';
 
-export function parseCmdAndParam(cmdPrefix: string, message: string) {
-  const sep = message.indexOf(' ');
-  const cmd = message.substring(cmdPrefix.length, sep === -1 ? undefined : sep);
-  const param = sep === -1 ? undefined : message.substring(sep + 1).trim() || undefined;
-  return { cmd, param };
+// Take a string and trim the first space separated word and return this word and the remainder
+// preTrimLength trims the first N chars from the str input off of the returned 'word' (for cmdPrefix)
+export function parseNextWord(str: string, preTrimLength = 0) {
+  const sep = str.indexOf(' ');
+  const word = str.substring(preTrimLength, sep === -1 ? undefined : sep);
+  const remain = sep === -1 ? undefined : str.substring(sep + 1).trim() || undefined;
+  return { word, remain };
 }
 
 // Wraps a string with backticks (`) if discord or single quotes (') if twitch

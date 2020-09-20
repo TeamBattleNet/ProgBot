@@ -16,4 +16,8 @@ export class Literally extends BaseEntity {
     if (filter) query.where('q.what = :filter', { filter });
     return query.orderBy('RANDOM()').limit(1).getOne();
   }
+
+  public static async isDuplicate(what: string, clip: string) {
+    return Boolean(await Literally.findOne({ where: { what, clip } }));
+  }
 }

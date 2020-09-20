@@ -1,5 +1,5 @@
 import discord from 'discord.js';
-import { parseCmdAndParam } from '../shared/utils';
+import { parseNextWord } from '../shared/utils';
 import { Config } from '../../../clients/configuration';
 import { getLogger } from '../../../logger';
 import type { CommandCategory } from '../../../types';
@@ -43,7 +43,7 @@ export class DiscordClient {
 
   public static async handleMessage(message: discord.Message) {
     if (message.content.startsWith(DiscordClient.cmdPrefix)) {
-      const { cmd, param } = parseCmdAndParam(DiscordClient.cmdPrefix, message.content);
+      const { word: cmd, remain: param } = parseNextWord(message.content, DiscordClient.cmdPrefix.length);
       logger.trace(`cmd: '${cmd}' params: '${param}' user: ${message.member?.user.username}#${message.member?.user.discriminator}`);
       if (DiscordClient.commands[cmd]) {
         // Start typing if reply takes time to generate (over 100ms)

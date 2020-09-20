@@ -1,4 +1,4 @@
-import { parseCmdAndParam } from '../shared/utils';
+import { parseNextWord } from '../shared/utils';
 import { Config } from '../../../clients/configuration';
 import { getLogger } from '../../../logger';
 import { RefreshableAuthProvider, StaticAuthProvider } from 'twitch-auth';
@@ -56,7 +56,7 @@ export class TwitchClient {
 
   public static async handleMessage(_chan: string, _user: string, message: string, msg: PrivateMessage) {
     if (message.startsWith(TwitchClient.cmdPrefix)) {
-      const { cmd, param } = parseCmdAndParam(TwitchClient.cmdPrefix, message);
+      const { word: cmd, remain: param } = parseNextWord(message, TwitchClient.cmdPrefix.length);
       logger.trace(`cmd: '${cmd}' params: '${param}' channel: '${msg.target.value}' user: ${msg.userInfo.userName}`);
       if (TwitchClient.commands[cmd]) {
         try {

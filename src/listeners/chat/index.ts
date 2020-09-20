@@ -7,8 +7,8 @@ import { generateApiKey } from './discord/apiKey';
 import { registerTwitch } from './twitch/register';
 import { ping } from './shared/ping';
 import { getAllStaticCommands, addStaticCommand, removeStaticCommand } from './shared/staticCommands';
-import { quote } from './shared/quote';
-import { literally } from './shared/literally';
+import { quote, addQuote } from './shared/quote';
+import { literally, addLiterally } from './shared/literally';
 import { blame } from './shared/blame';
 
 export async function initializeChatBotHandlers() {
@@ -17,7 +17,9 @@ export async function initializeChatBotHandlers() {
 
   // General
   registerCommonAnonymousCommand(quote);
+  registerCommonAdminCommand(addQuote);
   registerCommonAnonymousCommand(literally);
+  registerCommonAdminCommand(addLiterally);
   registerCommonAnonymousCommand(blame);
 
   // Static
