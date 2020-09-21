@@ -1,6 +1,7 @@
 import 'source-map-support/register';
 import 'reflect-metadata'; // for TypeORM
 import { Database } from './clients/database';
+import { Chip } from './models/chip';
 import { startWebserver, stopWebserver } from './listeners/webserver/server';
 import { DiscordClient } from './listeners/chat/discord/discordBot';
 import { TwitchClient } from './listeners/chat/twitch/twitchBot';
@@ -11,6 +12,8 @@ const logger = getLogger('main');
 async function main() {
   logger.info('Starting progbot');
   await Database.initialize();
+  logger.info('Loading chip cache');
+  await Chip.loadCache();
   logger.info('Starting api server');
   await startWebserver();
   await initializeChatBotHandlers();

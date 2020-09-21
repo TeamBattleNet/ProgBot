@@ -12,6 +12,14 @@ function pickHigherUserClass(userClass1: UserClass, userClass2: UserClass) {
   return userClass2;
 }
 
+interface battlechips {
+  [chipId: string]: number;
+}
+
+function getBattleChipProxy(battlechips: battlechips) {
+  return new Proxy(battlechips, { get: (target, key) => (Object.prototype.hasOwnProperty.call(target, key) ? target[key as string] : 0) });
+}
+
 @Entity()
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -24,6 +32,22 @@ export class User extends BaseEntity {
   @Column({ unique: true })
   @Generated('uuid') // if not defined, random useless uuid is used (for uniqueness)
   discordUserId: string;
+
+  @Column({ default: 0 })
+  zenny: number;
+
+  @Column({ default: 0 })
+  bugfrags: number;
+
+  @Column({
+    type: 'varchar',
+    default: '{}',
+    transformer: {
+      from: (val: string) => getBattleChipProxy(JSON.parse(val)),
+      to: (val: battlechips) => JSON.stringify(val),
+    },
+  })
+  battlechips: battlechips;
 
   @Column({ unique: true })
   @Generated('uuid')
@@ -78,6 +102,11 @@ export class User extends BaseEntity {
     combinedUser.discordUserId = discordUser.discordUserId;
     // Combine any other properties (i.e. owned chips) here
     combinedUser.userClass = pickHigherUserClass(twitchUser.userClass, discordUser.userClass);
+    combinedUser.zenny = twitchUser.zenny + discordUser.zenny;
+    combinedUser.bugfrags = twitchUser.bugfrags + discordUser.bugfrags;
+    const combinedBattleChips = getBattleChipProxy({});
+    [twitchUser.battlechips, discordUser.battlechips].forEach((battlechips) => Object.entries(battlechips).forEach(([id, count]) => (combinedBattleChips[id] += count)));
+    combinedUser.battlechips = combinedBattleChips;
     // Delete the old users and save the new combined one
     await Database.connection.transaction(async (transactionManager) => {
       await transactionManager.delete(User, [twitchUser.id, discordUser.id]);
@@ -92,6 +121,6 @@ export class User extends BaseEntity {
     if (options.twitchUserId) newUser.twitchUserId = options.twitchUserId;
     if (options.discordUserId) newUser.discordUserId = options.discordUserId;
     await newUser.save();
-    return newUser;
+    // explicitly don't return new user entity. If user is to be used after creation, it should be re-fetched from DB with defaults now filled (from DB schema defined defaults)
   }
 }

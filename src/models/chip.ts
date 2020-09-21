@@ -27,8 +27,24 @@ export class Chip extends BaseEntity {
   @Column()
   element: ChipElement;
 
+  private static chipCache: { [id: string]: Chip | undefined } = {};
+
+  // This should be called upon boot of the application
+  // It will load the whole chip table from the db into memory for quick access
+  public static async loadCache() {
+    const allChips = await Chip.find();
+    Chip.chipCache = {}; // first clear the cache
+    allChips.forEach((chip) => (Chip.chipCache[chip.id] = chip));
+  }
+
+  public static getById(chipId: number | string) {
+    const chip = Chip.chipCache[chipId];
+    if (!chip) throw Error(`Requested invalid chip with id ${chipId}`);
+    return chip;
+  }
+
   // Can be used with migration file(s) via a provided queryRunner
-  static async csvChipDBImport(queryRunner: QueryRunner, chipsCSVFile = DEFAULT_CHIPS_CSV) {
+  public static async csvChipDBImport(queryRunner: QueryRunner, chipsCSVFile = DEFAULT_CHIPS_CSV) {
     // read in the csv
     const csvFile: string = await fs.readFile(chipsCSVFile, 'utf8');
     // Parse the csv file into Chip entities
