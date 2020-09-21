@@ -42,6 +42,7 @@ export class TwitchClient {
       handler: MsgHandler;
     };
   } = {};
+  private static channelsCache: { [channel: string]: TwitchChannel | undefined } = {};
 
   public static async connect() {
     await TwitchClient.client.connect();
@@ -54,28 +55,50 @@ export class TwitchClient {
     const channels = await TwitchChannel.getAllChannels();
     // Make sure we have/bootstrap the bot's own channel
     let hasOwnChannel = false;
-    channels.forEach((channel) => {
-      if (channel.channel === TwitchClient.username) hasOwnChannel = true;
-    });
+    for (const channel of channels) {
+      if (channel.channel === TwitchClient.username) {
+        hasOwnChannel = true;
+        break;
+      }
+    }
     if (!hasOwnChannel) channels.push(await TwitchChannel.createNewChannel(TwitchClient.username));
     // Actually join the channels now
     await Promise.all(
       channels.map(async (channel) => {
-        await TwitchClient.client.join(`#${channel.channel}`);
-        logger.info(`Joined twitch channel ${channel.channel}`);
+        try {
+          await TwitchClient.joinChannel(channel);
+        } catch {
+          logger.error(`Failed to join twitch channel ${channel.channel}`);
+        }
       })
     );
   }
 
-  public static leaveChannel(channel: string) {
-    TwitchClient.client.part(`#${channel}`);
+  public static async joinChannel(channel: TwitchChannel) {
+    await TwitchClient.client.join(`#${channel.channel}`);
+    TwitchClient.channelsCache[channel.channel] = channel; // Add connected channel to cache
+    logger.info(`Joined twitch channel ${channel.channel}`);
   }
 
-  public static async handleMessage(_chan: string, _user: string, message: string, msg: PrivateMessage) {
-    if (message.startsWith(TwitchClient.cmdPrefix)) {
-      const { word: cmd, remain: param } = parseNextWord(message, TwitchClient.cmdPrefix.length);
-      logger.trace(`cmd: '${cmd}' params: '${param}' channel: '${msg.target.value}' user: ${msg.userInfo.userName}`);
-      if (TwitchClient.commands[cmd]) {
+  public static leaveChannel(channel: string) {
+    channel = channel.toLowerCase();
+    TwitchClient.client.part(`#${channel}`);
+    delete TwitchClient.channelsCache[channel];
+  }
+
+  public static getTwitchChannelFromCache(channel: string) {
+    const formatted = channel.startsWith('#') ? channel.substring(1).toLowerCase() : channel.toLowerCase();
+    const chan = TwitchClient.channelsCache[formatted];
+    if (!chan) throw new Error(`Could not find channel ${formatted} in cache`);
+    return chan;
+  }
+
+  public static async handleMessage(_chan: string, _usr: string, _msg: string, msg: PrivateMessage) {
+    if (msg.message.value.startsWith(TwitchClient.cmdPrefix)) {
+      const channel = msg.target.value.substring(1).toLowerCase();
+      const { word: cmd, remain: param } = parseNextWord(msg.message.value, TwitchClient.cmdPrefix.length);
+      logger.trace(`cmd: '${cmd}' params: '${param}' channel: '${channel}' user: ${msg.userInfo.userName}`);
+      if (TwitchClient.commands[cmd] && !TwitchClient.channelsCache[channel]?.isDisabledCommand(cmd)) {
         try {
           const reply = await TwitchClient.commands[cmd].handler(msg, param);
           if (reply) TwitchClient.client.say(msg.target.value, reply);

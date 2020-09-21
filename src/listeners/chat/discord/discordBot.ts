@@ -56,7 +56,7 @@ export class DiscordClient {
           const reply = await DiscordClient.commands[cmd].handler(message, param);
           clearTimeout(timeout);
           if (reply) await message.channel.send(reply);
-          else if (typing) message.channel.stopTyping(true);
+          if (typing) message.channel.stopTyping(true);
         } catch (e) {
           logger.error(e);
           await message.channel.send('Internal Error');

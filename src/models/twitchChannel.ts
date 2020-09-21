@@ -34,6 +34,10 @@ export class TwitchChannel extends BaseEntity {
     return TwitchChannel.find();
   }
 
+  public static async getChannel(channel: string) {
+    return TwitchChannel.findOne({ where: { channel: channel.toLowerCase() } });
+  }
+
   public static async createNewChannel(channel: string) {
     const lowerChannel = channel.toLowerCase();
     if (await TwitchChannel.findOne({ where: { channel: lowerChannel } })) throw Error(`Channel ${channel} already exists`);

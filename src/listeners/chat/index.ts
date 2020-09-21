@@ -2,6 +2,15 @@ import { registerCommonAnonymousCommand, registerCommonRegisteredCommand, regist
 import * as accountLink from './shared/accountLink';
 import { DiscordClient } from './discord/discordBot';
 import { TwitchClient } from './twitch/twitchBot';
+import {
+  enableCmdOnChannel,
+  disableCmdOnChannel,
+  listDisabledCmdsOnChannel,
+  addAllowedTwitchChannel,
+  listAllowedTwitchChannels,
+  reloadAllowedTwitchChannels,
+  removeAllowedTwitchChannel,
+} from './twitch/twitchChannel';
 import { registerDiscord } from './discord/register';
 import { generateApiKey } from './discord/apiKey';
 import { registerTwitch } from './twitch/register';
@@ -35,4 +44,13 @@ export async function initializeChatBotHandlers() {
   TwitchClient.registerCommand(registerTwitch);
   registerCommonRegisteredCommand(accountLink.startLinkCommon);
   registerCommonRegisteredCommand(accountLink.confirmLinkCommon);
+
+  // Twitch Channels
+  TwitchClient.registerCommand(enableCmdOnChannel);
+  TwitchClient.registerCommand(disableCmdOnChannel);
+  TwitchClient.registerCommand(listDisabledCmdsOnChannel);
+  registerCommonAdminCommand(addAllowedTwitchChannel);
+  registerCommonAdminCommand(removeAllowedTwitchChannel);
+  registerCommonAdminCommand(listAllowedTwitchChannels);
+  registerCommonAdminCommand(reloadAllowedTwitchChannels);
 }

@@ -11,7 +11,7 @@ export interface ConfigFile {
   twitch_bot_cmd_prefix: string;
 }
 
-export type CommandCategory = 'Accounts' | 'Help' | 'General' | 'Simple' | 'Admin';
+export type CommandCategory = 'Accounts' | 'Help' | 'General' | 'Simple' | 'Admin' | 'Channel';
 
 export type ChipElement = 'none' | 'aqua' | 'wind' | 'elec' | 'wood' | 'fire' | 'obj' | 'recov' | 'break' | 'sword' | 'invis' | 'num' | 'search' | 'ground';
 export type ChipCategory = 'std' | 'mega' | 'navi' | 'giga' | 'dark';
