@@ -17,7 +17,17 @@ interface battlechips {
 }
 
 function getBattleChipProxy(battlechips: battlechips) {
-  return new Proxy(battlechips, { get: (target, key) => (Object.prototype.hasOwnProperty.call(target, key) ? target[key as string] : 0) });
+  return new Proxy(battlechips, {
+    get: (target, key) => {
+      // Throw an error if a symbol index is used to access this proxy
+      // Related issues: https://github.com/Microsoft/TypeScript/issues/24587 https://github.com/typeorm/typeorm/issues/2065
+      // Unfortunately typescript cannot get an object property by symbol index, so we cannot pass through the request in this proxy in typescript
+      // Also typeorm does some weird checks which can use symbol indexes on entity properties which breaks against this proxy, so if that happens, just throw an error upfront
+      // If this error is ever thrown, then root cause should be evaluated to try to work around any possible symbol index accessors to this proxy
+      if (typeof key === 'symbol') throw Error('Tried to access symbol on battlechips proxy');
+      return Object.prototype.hasOwnProperty.call(target, key) ? target[key] : 0;
+    },
+  });
 }
 
 @Entity()
@@ -41,7 +51,6 @@ export class User extends BaseEntity {
 
   @Column({
     type: 'varchar',
-    default: '{}',
     transformer: {
       from: (val: string) => getBattleChipProxy(JSON.parse(val)),
       to: (val: battlechips) => JSON.stringify(val),
@@ -120,7 +129,8 @@ export class User extends BaseEntity {
     const newUser = new User();
     if (options.twitchUserId) newUser.twitchUserId = options.twitchUserId;
     if (options.discordUserId) newUser.discordUserId = options.discordUserId;
+    newUser.battlechips = getBattleChipProxy({});
     await newUser.save();
-    // explicitly don't return new user entity. If user is to be used after creation, it should be re-fetched from DB with defaults now filled (from DB schema defined defaults)
+    return newUser;
   }
 }
