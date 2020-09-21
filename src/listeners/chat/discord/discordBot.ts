@@ -91,7 +91,8 @@ export class DiscordClient {
   help - list all commands with their descriptions
   help [cmd] - get the description and usage information for [cmd]`,
     handler: async (_msg, param) => {
-      if (param) {
+      const requestAdmin = param?.toLowerCase() === 'admin'; // special case for asking command 'admin'
+      if (param && !requestAdmin) {
         // if help for a specific command
         if (DiscordClient.commands[param]) {
           return `\`\`\`${param} - ${DiscordClient.commands[param].desc}\n\n${DiscordClient.commands[param].usage}\`\`\``;
@@ -108,8 +109,12 @@ export class DiscordClient {
         let replyText = `\`\`\`Commands:\n`;
         const separator = '\n  ';
         Object.entries(cmdHelpByCategory).forEach(([category, data]) => {
-          // Filter 'Simple' and 'Admin' commands from help display
-          if (category !== 'Simple' && category !== 'Admin') replyText += `\n${category}:${separator}${data.join(separator)}\n`;
+          if (!requestAdmin) {
+            // Filter 'Simple' and 'Admin' commands from general help display
+            if (category !== 'Simple' && category !== 'Admin') replyText += `\n${category}:${separator}${data.join(separator)}\n`;
+          } else {
+            if (category === 'Admin') replyText += `\n${category}:${separator}${data.join(separator)}\n`;
+          }
         });
         return replyText.trimEnd() + '```';
       }
