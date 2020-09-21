@@ -9,9 +9,7 @@ export const registerDiscord: DiscordCommand = {
   handler: async (msg) => {
     const existingUser = await User.findByDiscordId(msg.author.id);
     if (existingUser) return `<@${msg.author.id}> You are already registered!`;
-    const newUser = new User();
-    newUser.discordUserId = msg.author.id;
-    await newUser.save();
+    await User.createNewUser({ discordUserId: msg.author.id });
     return `<@${msg.author.id}> You are now registered!`;
   },
 };

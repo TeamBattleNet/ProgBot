@@ -26,9 +26,9 @@ export const listSimpleCommands: CommonAnonymousCommand = {
   usageInfo: 'usage: listsimplecommands',
   handler: async () => {
     const commands = await SimpleCommand.getAllCommands();
-    return `Available Simple Commands:\n${commands.map(cmd => cmd.cmd).join(', ')}`;
-  }
-}
+    return `Available Simple Commands:\n${commands.map((cmd) => cmd.cmd).join(', ')}`;
+  },
+};
 
 export const addSimpleCommand: CommonAdminCommand = {
   cmd: 'addsimplecommand',
@@ -43,10 +43,7 @@ export const addSimpleCommand: CommonAdminCommand = {
     // Ensure this command does not already exist on a bot
     if (TwitchClient.doesCommandExist(cmd) || DiscordClient.doesCommandExist(cmd)) return `Command ${wrap(ctx, cmd)} already exists. Will not overwrite.`;
     // Create the command, saving it to the db
-    const newCmd = new SimpleCommand();
-    newCmd.cmd = cmd;
-    newCmd.reply = reply;
-    await newCmd.save();
+    const newCmd = await SimpleCommand.createNewCommand(cmd, reply);
     // Register the new command handler immediately after saving to db
     registerCommonAnonymousCommand(simpleCommandToCommonAnonymousCommand(newCmd));
     return `New command ${wrap(ctx, cmd)} created!`;

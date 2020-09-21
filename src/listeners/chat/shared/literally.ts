@@ -25,10 +25,7 @@ export const addLiterally: CommonAdminCommand = {
     const { word: what, remain: link } = parseNextWord(param || '');
     if (!link) return 'Invalid syntax. Try help addliterally for usage information';
     if (await Literally.isDuplicate(what, link)) return 'This is a duplicate entry! Not adding';
-    const litObj = new Literally();
-    litObj.what = what;
-    litObj.clip = link;
-    await litObj.save();
+    await Literally.createNewLiterally(what, link);
     return 'New entry added for literally successfully';
   },
 };

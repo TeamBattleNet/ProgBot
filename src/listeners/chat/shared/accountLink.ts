@@ -52,7 +52,7 @@ export const confirmLinkCommon: CommonRegisteredCommand = {
       twitchUser = await User.findByLinkToken(`${ctx.discordMsg?.author.username.toLowerCase()}#${ctx.discordMsg?.author.discriminator}`, param);
     }
     if (!discordUser || !twitchUser) return `Could not find ${otherService} account to link. Did you start the link on your ${ctx.chatType} account?`;
-    await User.linkAccounts(twitchUser, discordUser);
+    await User.combineUsers(twitchUser, discordUser);
     return 'Your discord and twitch accounts are now linked! Note: If you were using an api key, it has been reset.';
   },
 };

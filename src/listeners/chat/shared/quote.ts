@@ -40,12 +40,8 @@ export const addQuote: CommonAdminCommand = {
       quoteStr = match[2].trim();
       if (!quoteStr) return invalidSyntaxMessage;
     }
-    // Create the new quote and save it
-    const newQuote = new Quote();
-    newQuote.user = quotee;
-    newQuote.quote = quoteStr;
-    newQuote.date = date;
-    await newQuote.save();
+    // Create the new quote
+    await Quote.createNewQuote(quotee, quoteStr, date);
     return 'New quote added successfully';
   },
 };

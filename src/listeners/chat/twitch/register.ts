@@ -11,9 +11,7 @@ export const registerTwitch: TwitchCommand = {
     if (!userId) throw new Error(`Couldn't find twitch user id for message by ${msg.userInfo.userName}`);
     const existingUser = await User.findByTwitchUserId(userId);
     if (existingUser) return `${msg.userInfo.userName}: You are already registered!`;
-    const newUser = new User();
-    newUser.twitchUserId = userId;
-    await newUser.save();
+    await User.createNewUser({ twitchUserId: userId });
     return `${msg.userInfo.userName}: You are now registered!`;
   },
 };

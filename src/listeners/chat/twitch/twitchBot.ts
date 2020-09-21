@@ -1,5 +1,6 @@
 import { parseNextWord } from '../shared/utils';
 import { Config } from '../../../clients/configuration';
+import { TwitchChannel } from '../../../models/twitchChannel';
 import { getLogger } from '../../../logger';
 import { RefreshableAuthProvider, StaticAuthProvider } from 'twitch-auth';
 import { ChatClient, PrivateMessage } from 'twitch-chat-client';
@@ -47,11 +48,27 @@ export class TwitchClient {
   }
 
   public static async postRegistration() {
-    TwitchClient.username = TwitchClient.client.currentNick;
+    TwitchClient.username = TwitchClient.client.currentNick.toLowerCase();
     logger.info(`Twitch user ${TwitchClient.username} logged into chat`);
     // Join channels here
-    await TwitchClient.client.join(`#${TwitchClient.username}`); // always join our own channel chat
-    logger.info(`Joined twitch channel #${TwitchClient.username}`);
+    const channels = await TwitchChannel.getAllChannels();
+    // Make sure we have/bootstrap the bot's own channel
+    let hasOwnChannel = false;
+    channels.forEach((channel) => {
+      if (channel.channel === TwitchClient.username) hasOwnChannel = true;
+    });
+    if (!hasOwnChannel) channels.push(await TwitchChannel.createNewChannel(TwitchClient.username));
+    // Actually join the channels now
+    await Promise.all(
+      channels.map(async (channel) => {
+        await TwitchClient.client.join(`#${channel.channel}`);
+        logger.info(`Joined twitch channel ${channel.channel}`);
+      })
+    );
+  }
+
+  public static leaveChannel(channel: string) {
+    TwitchClient.client.part(`#${channel}`);
   }
 
   public static async handleMessage(_chan: string, _user: string, message: string, msg: PrivateMessage) {

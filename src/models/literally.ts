@@ -20,4 +20,12 @@ export class Literally extends BaseEntity {
   public static async isDuplicate(what: string, clip: string) {
     return Boolean(await Literally.findOne({ where: { what, clip } }));
   }
+
+  public static async createNewLiterally(what: string, clip: string) {
+    const newLit = new Literally();
+    newLit.what = what;
+    newLit.clip = clip;
+    await newLit.save();
+    return newLit;
+  }
 }

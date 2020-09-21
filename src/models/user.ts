@@ -72,7 +72,7 @@ export class User extends BaseEntity {
     return User.findOne({ where: { linkToken: `${username} ${randomToken}` } });
   }
 
-  public static async linkAccounts(twitchUser: User, discordUser: User) {
+  public static async combineUsers(twitchUser: User, discordUser: User) {
     const combinedUser = new User();
     combinedUser.twitchUserId = twitchUser.twitchUserId;
     combinedUser.discordUserId = discordUser.discordUserId;
@@ -84,5 +84,14 @@ export class User extends BaseEntity {
       await transactionManager.save(combinedUser);
     });
     return combinedUser;
+  }
+
+  public static async createNewUser(options: { twitchUserId?: string; discordUserId?: string }) {
+    if (!options.twitchUserId && !options.discordUserId) throw new Error('Must provide either a twitchUserId or discordUserId to create a new user');
+    const newUser = new User();
+    if (options.twitchUserId) newUser.twitchUserId = options.twitchUserId;
+    if (options.discordUserId) newUser.discordUserId = options.discordUserId;
+    await newUser.save();
+    return newUser;
   }
 }
