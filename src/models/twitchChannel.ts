@@ -9,8 +9,15 @@ export class TwitchChannel extends BaseEntity {
   @Column({ type: 'varchar', transformer: { from: (val: string) => new Set(val.split(',')), to: (val: Set<string>) => [...val].join(',') } })
   disabledCommands: Set<string>;
 
+  @Column({ default: 0 })
+  minimumBrowseSeconds: number;
+
   public isDisabledCommand(cmd: string) {
     return this.disabledCommands.has(cmd);
+  }
+
+  public canBrowse(lastBrowseTime: Date) {
+    return (new Date().getTime() - lastBrowseTime.getTime()) / 1000 > this.minimumBrowseSeconds;
   }
 
   public async addDisabledCommands(cmds: string[]) {
@@ -28,6 +35,11 @@ export class TwitchChannel extends BaseEntity {
     cmds.forEach((cmd) => this.disabledCommands.delete(cmd));
     // Only save if something has changed
     if (this.disabledCommands.size !== beforeSize) await this.save();
+  }
+
+  public async setMinBrowseSeconds(seconds: number) {
+    this.minimumBrowseSeconds = Math.max(0, Math.floor(seconds)); // Make sure an integer with a floor of 0
+    await this.save();
   }
 
   public static async getAllChannels() {

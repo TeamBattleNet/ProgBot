@@ -6,6 +6,7 @@ import {
   enableCmdOnChannel,
   disableCmdOnChannel,
   listDisabledCmdsOnChannel,
+  setMinBrowseTime,
   addAllowedTwitchChannel,
   listAllowedTwitchChannels,
   reloadAllowedTwitchChannels,
@@ -49,6 +50,7 @@ export async function initializeChatBotHandlers() {
   TwitchClient.registerCommand(enableCmdOnChannel);
   TwitchClient.registerCommand(disableCmdOnChannel);
   TwitchClient.registerCommand(listDisabledCmdsOnChannel);
+  TwitchClient.registerCommand(setMinBrowseTime);
   registerCommonAdminCommand(addAllowedTwitchChannel);
   registerCommonAdminCommand(removeAllowedTwitchChannel);
   registerCommonAdminCommand(listAllowedTwitchChannels);

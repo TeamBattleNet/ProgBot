@@ -49,6 +49,22 @@ export const listDisabledCmdsOnChannel: TwitchCommand = {
   },
 };
 
+export const setMinBrowseTime: TwitchCommand = {
+  cmd: 'setminchannelbrowsetime',
+  category: 'Channel',
+  shortDescription: 'Set the minimum number of seconds allowed between browsing for this twitch channel',
+  usageInfo: 'usage: setminchannelbrowsetime <seconds>',
+  handler: async (msg, param) => {
+    // Make action only available to channel owner (broadcaster) or channel mods
+    if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return 'Permission denied';
+    const channel = TwitchClient.getTwitchChannelFromCache(msg.target.value);
+    const num = Number.parseInt(param || '');
+    if (isNaN(num)) return 'Please provide a valid number of seconds';
+    await channel.setMinBrowseSeconds(num);
+    return `Set minimum browse time for this channel to ${num} seconds`;
+  },
+};
+
 export const addAllowedTwitchChannel: CommonAdminCommand = {
   cmd: 'addtwitchchannel',
   shortDescription: 'Add a new twitch channel that progbot should allow and join',

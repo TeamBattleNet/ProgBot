@@ -67,6 +67,9 @@ export class User extends BaseEntity {
   })
   battlechips: BattleChips;
 
+  @Column()
+  lastBrowseTime: Date;
+
   @Column({ unique: true })
   @Generated('uuid')
   apiKey: string;
@@ -127,6 +130,7 @@ export class User extends BaseEntity {
       battlechips.getAllCounts().forEach(([id, count]) => combinedBattleChips.setCount(id, combinedBattleChips.getCount(id) + count))
     );
     combinedUser.battlechips = combinedBattleChips;
+    combinedUser.lastBrowseTime = twitchUser.lastBrowseTime > discordUser.lastBrowseTime ? twitchUser.lastBrowseTime : discordUser.lastBrowseTime;
     // Delete the old users and save the new combined one
     await Database.connection.transaction(async (transactionManager) => {
       await transactionManager.delete(User, [twitchUser.id, discordUser.id]);
@@ -141,6 +145,9 @@ export class User extends BaseEntity {
     if (options.twitchUserId) newUser.twitchUserId = options.twitchUserId;
     if (options.discordUserId) newUser.discordUserId = options.discordUserId;
     newUser.battlechips = new BattleChips();
+    newUser.lastBrowseTime = new Date();
+    // Set last browse time for new users back 1 day from now to let them have a good first browse
+    newUser.lastBrowseTime.setUTCDate(newUser.lastBrowseTime.getUTCDate() - 1);
     await newUser.save();
     return newUser;
   }
