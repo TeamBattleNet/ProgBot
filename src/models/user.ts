@@ -12,22 +12,30 @@ function pickHigherUserClass(userClass1: UserClass, userClass2: UserClass) {
   return userClass2;
 }
 
-interface battlechips {
-  [chipId: string]: number;
-}
+class BattleChips {
+  private battleChipCounts: { [chipId: string]: number };
 
-function getBattleChipProxy(battlechips: battlechips) {
-  return new Proxy(battlechips, {
-    get: (target, key) => {
-      // Throw an error if a symbol index is used to access this proxy
-      // Related issues: https://github.com/Microsoft/TypeScript/issues/24587 https://github.com/typeorm/typeorm/issues/2065
-      // Unfortunately typescript cannot get an object property by symbol index, so we cannot pass through the request in this proxy in typescript
-      // Also typeorm does some weird checks which can use symbol indexes on entity properties which breaks against this proxy, so if that happens, just throw an error upfront
-      // If this error is ever thrown, then root cause should be evaluated to try to work around any possible symbol index accessors to this proxy
-      if (typeof key === 'symbol') throw Error('Tried to access symbol on battlechips proxy');
-      return Object.prototype.hasOwnProperty.call(target, key) ? target[key] : 0;
-    },
-  });
+  constructor(fromString?: string) {
+    if (fromString) this.battleChipCounts = JSON.parse(fromString);
+    else this.battleChipCounts = {};
+  }
+
+  public getCount(chipId: string | number) {
+    if (chipId in this.battleChipCounts) return this.battleChipCounts[chipId];
+    return 0;
+  }
+
+  public setCount(chipId: string | number, count: number) {
+    this.battleChipCounts[chipId] = count;
+  }
+
+  public getAllCounts() {
+    return Object.entries(this.battleChipCounts);
+  }
+
+  public toString() {
+    return JSON.stringify(this.battleChipCounts);
+  }
 }
 
 @Entity()
@@ -51,12 +59,13 @@ export class User extends BaseEntity {
 
   @Column({
     type: 'varchar',
+    default: '{}',
     transformer: {
-      from: (val: string) => getBattleChipProxy(JSON.parse(val)),
-      to: (val: battlechips) => JSON.stringify(val),
+      from: (val: string) => new BattleChips(val),
+      to: (val: BattleChips) => val.toString(),
     },
   })
-  battlechips: battlechips;
+  battlechips: BattleChips;
 
   @Column({ unique: true })
   @Generated('uuid')
@@ -113,8 +122,10 @@ export class User extends BaseEntity {
     combinedUser.userClass = pickHigherUserClass(twitchUser.userClass, discordUser.userClass);
     combinedUser.zenny = twitchUser.zenny + discordUser.zenny;
     combinedUser.bugfrags = twitchUser.bugfrags + discordUser.bugfrags;
-    const combinedBattleChips = getBattleChipProxy({});
-    [twitchUser.battlechips, discordUser.battlechips].forEach((battlechips) => Object.entries(battlechips).forEach(([id, count]) => (combinedBattleChips[id] += count)));
+    const combinedBattleChips = new BattleChips();
+    [twitchUser.battlechips, discordUser.battlechips].forEach((battlechips) =>
+      battlechips.getAllCounts().forEach(([id, count]) => combinedBattleChips.setCount(id, combinedBattleChips.getCount(id) + count))
+    );
     combinedUser.battlechips = combinedBattleChips;
     // Delete the old users and save the new combined one
     await Database.connection.transaction(async (transactionManager) => {
@@ -129,7 +140,7 @@ export class User extends BaseEntity {
     const newUser = new User();
     if (options.twitchUserId) newUser.twitchUserId = options.twitchUserId;
     if (options.discordUserId) newUser.discordUserId = options.discordUserId;
-    newUser.battlechips = getBattleChipProxy({});
+    newUser.battlechips = new BattleChips();
     await newUser.save();
     return newUser;
   }
