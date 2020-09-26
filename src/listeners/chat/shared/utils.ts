@@ -8,6 +8,8 @@ const EMOTE_MAP: { [emote: string]: { [chatType: string]: string } } = {
   NumberBrain: { discord: '<:NumberBrain:584920179507724308>', twitch: 'NumberBrain' },
   MoZenny: { discord: '<:MoZenny:430603785442820105>', twitch: 'MoZenny' },
   BathroomSplits: { discord: '<:BathroomSplits:590773382954614797>', twitch: 'BathroomSplits' },
+  RattyPls: { discord: '<:RattyPls:759549954497708044>', twitch: 'RattyPls' },
+  MoFrags: { discord: '<:MoFrags:759549839452930048>', twitch: 'MoFrags' },
 };
 
 // Take a string and trim the first space separated word and return this word and the remainder

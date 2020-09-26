@@ -13,7 +13,7 @@ export class Literally extends BaseEntity {
 
   public static async getRandomLiterally(filter?: string) {
     const query = Literally.createQueryBuilder('q');
-    if (filter) query.where('q.what = :filter', { filter });
+    if (filter) query.where('q.what LIKE :filter', { filter: `%${filter}%` });
     return query.orderBy('RANDOM()').limit(1).getOne();
   }
 
