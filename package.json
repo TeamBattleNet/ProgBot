@@ -1,6 +1,7 @@
 {
   "name": "progbot",
   "author": "TeamBN",
+  "license": "Unlicense",
   "description": "TeamBN's progbot",
   "version": "2.0.0",
   "repository": {
