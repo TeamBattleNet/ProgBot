@@ -2,6 +2,12 @@ import { ChatContext } from './common';
 
 const EMOTE_MAP: { [emote: string]: { [chatType: string]: string } } = {
   ProgChamp: { discord: '<:ProgChamp:281409807754461184>', twitch: 'ProgChamp' },
+  TalkToMom: { discord: '<:TalkToMom:281412663072784385>', twitch: 'TalkToMom' },
+  TalkToDad: { discord: '<:TalkToDad:281412643305029632>', twitch: 'TalkToDad' },
+  PawnChamp: { discord: '<:Pawn1:279167434613719041><:Pawn2:279167464515043328>', twitch: 'PawnChamp' },
+  NumberBrain: { discord: '<:NumberBrain:584920179507724308>', twitch: 'NumberBrain' },
+  MoZenny: { discord: '<:MoZenny:430603785442820105>', twitch: 'MoZenny' },
+  BathroomSplits: { discord: '<:BathroomSplits:590773382954614797>', twitch: 'BathroomSplits' },
 };
 
 // Take a string and trim the first space separated word and return this word and the remainder

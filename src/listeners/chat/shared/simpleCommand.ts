@@ -54,7 +54,11 @@ export const addSimpleCommand: CommonAdminCommand = {
   cmd: 'addsimplecmd',
   shortDescription: 'Add a simple static response command to progbot',
   usageInfo: `usage: addsimplecommand <cmd> <response>
-  example: addsimplecommand bn3notes Find notes for speedrunning BN3 here: https://totally.a.real.link`,
+  In order to add an emote, use 'emote:MyEmoteName' in the response. This will be replaced with the
+  appropriate discord or twitch emote as appropriate.
+
+  example: addsimplecommand bn3notes Find notes for speedrunning BN3 here: https://totally.a.real.link
+  example (with emote): addsimplecommand prog Hello emote:ProgChamp emote:TalkToDad`,
   handler: async (ctx, _user, param) => {
     const invalidSyntaxMessage = 'Invalid syntax. Try help addsimplecommand for usage information';
     if (!param) return invalidSyntaxMessage;
