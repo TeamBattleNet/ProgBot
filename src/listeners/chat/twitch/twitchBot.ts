@@ -75,8 +75,10 @@ export class TwitchClient {
   }
 
   public static async joinChannel(channel: TwitchChannel) {
-    await TwitchClient.client.join(`#${channel.channel}`);
+    const chan = `#${channel.channel}`;
+    await TwitchClient.client.join(chan);
     TwitchClient.channelsCache[channel.channel] = channel; // Add connected channel to cache
+    TwitchClient.client.say(chan, 'Logging on and jacking in!');
     logger.info(`Joined twitch channel ${channel.channel}`);
   }
 
