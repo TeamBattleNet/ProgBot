@@ -1,16 +1,36 @@
 import { CommonAnonymousCommand, CommonAdminCommand, registerCommonAnonymousCommand } from './common';
-import { wrap, parseNextWord } from './utils';
+import { wrap, parseNextWord, getEmote } from './utils';
 import { DiscordClient } from '../discord/discordBot';
 import { TwitchClient } from '../twitch/twitchBot';
 import { SimpleCommand } from '../../../models/simpleCommand';
 
+const emoteReplaceRegex = /emote:[^ ]+/gm;
+
+const SIMPLE_MSG_LAST_SENT_CACHE: { [cmd: string]: { [chan: string]: Date | undefined } } = {};
+
 function simpleCommandToCommonAnonymousCommand(cmd: SimpleCommand): CommonAnonymousCommand {
+  SIMPLE_MSG_LAST_SENT_CACHE[cmd.cmd] = {}; // Setup cache for this new cmd
   return {
     cmd: cmd.cmd,
     category: 'Simple',
     shortDescription: cmd.cmd,
     usageInfo: `usage: ${cmd.cmd}`,
-    handler: async () => cmd.reply,
+    handler: async (ctx) => {
+      const chan = (ctx.chatType === 'discord' ? ctx.discordMsg?.channel.id : ctx.twitchMsg?.target.value) || '';
+      const lastSent = SIMPLE_MSG_LAST_SENT_CACHE[cmd.cmd][chan];
+      const now = new Date();
+      // Don't re-send simple response if this cmd has been used in this channel in the last 5 seconds
+      if (lastSent && now.getTime() - lastSent.getTime() < 5000) return '';
+      SIMPLE_MSG_LAST_SENT_CACHE[cmd.cmd][chan] = now;
+      const matches = cmd.reply.match(emoteReplaceRegex);
+      if (!matches) return cmd.reply;
+      let reply = cmd.reply;
+      matches.forEach((match) => {
+        const emoteName = match.substring(6);
+        reply = reply.replace(match, getEmote(ctx, emoteName));
+      });
+      return reply;
+    },
   };
 }
 
@@ -20,7 +40,7 @@ export async function getAllSimpleCommands(): Promise<CommonAnonymousCommand[]> 
 }
 
 export const listSimpleCommands: CommonAnonymousCommand = {
-  cmd: 'listsimplecommands',
+  cmd: 'listsimplecmds',
   category: 'General',
   shortDescription: 'View all of the simple commands that progbot currently has',
   usageInfo: 'usage: listsimplecommands',
@@ -31,7 +51,7 @@ export const listSimpleCommands: CommonAnonymousCommand = {
 };
 
 export const addSimpleCommand: CommonAdminCommand = {
-  cmd: 'addsimplecommand',
+  cmd: 'addsimplecmd',
   shortDescription: 'Add a simple static response command to progbot',
   usageInfo: `usage: addsimplecommand <cmd> <response>
   example: addsimplecommand bn3notes Find notes for speedrunning BN3 here: https://totally.a.real.link`,
@@ -42,6 +62,10 @@ export const addSimpleCommand: CommonAdminCommand = {
     if (!reply) return invalidSyntaxMessage;
     // Ensure this command does not already exist on a bot
     if (TwitchClient.doesCommandExist(cmd) || DiscordClient.doesCommandExist(cmd)) return `Command ${wrap(ctx, cmd)} already exists. Will not overwrite.`;
+    for (const match of reply.match(emoteReplaceRegex) || []) {
+      const emoteName = match.substring(6);
+      if (!getEmote({ chatType: 'discord' }, emoteName) || !getEmote({ chatType: 'twitch' }, emoteName)) return `Error: Could not find emote ${wrap(ctx, emoteName)}`;
+    }
     // Create the command, saving it to the db
     const newCmd = await SimpleCommand.createNewCommand(cmd, reply);
     // Register the new command handler immediately after saving to db
@@ -51,7 +75,7 @@ export const addSimpleCommand: CommonAdminCommand = {
 };
 
 export const removeSimpleCommand: CommonAdminCommand = {
-  cmd: 'removesimplecommand',
+  cmd: 'removesimplecmd',
   shortDescription: 'Remove a simple command from progbot',
   usageInfo: `usage: removesimplecommand <cmd>
   example: removesimplecommand bn3notes`,
