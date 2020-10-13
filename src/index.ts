@@ -24,7 +24,7 @@ async function main() {
 }
 
 let stopSignalReceived = false;
-async function shutdown() {
+export async function shutdown() {
   if (stopSignalReceived) {
     logger.error('Ungraceful forced termination - stop signal receieved multiple times');
     process.exit(1);
