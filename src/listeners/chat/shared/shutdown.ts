@@ -8,5 +8,5 @@ export const addLiterally: CommonAdminCommand = {
   handler: async () => {
     await shutdown();
     return '';
-  }
+  },
 };
