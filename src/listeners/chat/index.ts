@@ -15,6 +15,7 @@ import {
 import { registerDiscord } from './discord/register';
 import { generateApiKey } from './discord/apiKey';
 import { registerTwitch } from './twitch/register';
+import { shutdownCmd } from './shared/shutdown';
 import { ping } from './shared/ping';
 import { getAllSimpleCommands, addSimpleCommand, removeSimpleCommand, listSimpleCommands } from './shared/simpleCommand';
 import { quote, addQuote } from './shared/quote';
@@ -32,7 +33,10 @@ export async function initializeChatBotHandlers() {
   registerCommonAdminCommand(addLiterally);
   registerCommonAnonymousCommand(blame);
 
-  // Simple
+  // Misc
+  registerCommonAdminCommand(shutdownCmd);
+
+  // Simple Commands
   (await getAllSimpleCommands()).forEach(registerCommonAnonymousCommand);
   registerCommonAnonymousCommand(listSimpleCommands);
   registerCommonAdminCommand(addSimpleCommand);
