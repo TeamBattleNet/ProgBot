@@ -1,6 +1,7 @@
 import { TwitchClient, TwitchCommand } from './twitchBot';
 import { CommonAdminCommand } from '../shared/common';
 import { TwitchChannel } from '../../../models/twitchChannel';
+import { sleep } from '../../../utils';
 import { getLogger } from '../../../logger';
 
 const logger = getLogger('TwitchChannels');
@@ -150,9 +151,3 @@ export const reloadAllowedTwitchChannels: CommonAdminCommand = {
     return response;
   },
 };
-
-async function sleep(ms: number) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
