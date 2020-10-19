@@ -1929,9 +1929,9 @@ ipaddr.js@1.9.1:
   integrity sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g==
 
 ircv3@^0.26.0:
-  version "0.26.3"
-  resolved "https://registry.yarnpkg.com/ircv3/-/ircv3-0.26.3.tgz#c804f1541b2cb25951b7127dba28bc2391c6f97b"
-  integrity sha512-W4P+vqFVHUUBSCX7lY9HnH1Rag0OLqlpLSFE69z3qKx3Fpx4EpLVJVQXRF/LVSC+Fo1efvj9hXnH+A4m9yJwVQ==
+  version "0.26.4"
+  resolved "https://registry.yarnpkg.com/ircv3/-/ircv3-0.26.4.tgz#d61355aea4aedd001c11863298c6034b5596e180"
+  integrity sha512-7exmf76YORH9OSEn0zy4u6zuyrK0WSex2usP9GKjaMDDUnbwkjT2eyslJ5wE0A5s5F87MPI7cTC21T80UpSVdg==
   dependencies:
     "@d-fischer/connection" "^6.2.0"
     "@d-fischer/escape-string-regexp" "^5.0.0"

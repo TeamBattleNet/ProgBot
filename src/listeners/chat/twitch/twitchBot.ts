@@ -4,7 +4,6 @@ import { TwitchChannel } from '../../../models/twitchChannel';
 import { getLogger } from '../../../logger';
 import { RefreshableAuthProvider, StaticAuthProvider } from 'twitch-auth';
 import { ChatClient, PrivateMessage } from 'twitch-chat-client';
-import { sleep } from '../../../utils';
 import type { CommandCategory } from '../../../types';
 
 const logger = getLogger('twitch');
@@ -16,7 +15,7 @@ const singletonClient = new ChatClient(
     onRefresh: async ({ accessToken, refreshToken }) => await Config.updateTwitchAuthTokens(accessToken, refreshToken),
   }),
   {
-    logger: { emoji: false },
+    logger: { emoji: false, minLevel: 'INFO' },
   }
 );
 
@@ -50,10 +49,11 @@ export class TwitchClient {
   }
 
   public static async postRegistration() {
-    // Due to an oddity with the way twitch-chat-client works, the currentNick is not necessarily
-    // available when the register event is fired, so we must spinlock here to wait for it.
-    // This is to be revisited if this can ever be fixed by twitch-chat-client
-    while (!TwitchClient.client.currentNick) await sleep(100);
+    if (!TwitchClient.client.currentNick) {
+      // Should never happen unless there is an issue with the IRC client
+      logger.error('Twitch irc registration complete but nick not defined');
+      return;
+    }
     TwitchClient.username = TwitchClient.client.currentNick.toLowerCase();
     logger.info(`Twitch user ${TwitchClient.username} logged into chat`);
     // Join channels here
