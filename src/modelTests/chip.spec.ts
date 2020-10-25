@@ -19,7 +19,7 @@ describe('Chip', () => {
     let saveStub: SinonStub;
 
     beforeEach(() => {
-      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,cat,2,3,elem' });
+      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,2,3,aqua' });
       saveStub = sandbox.stub();
       queryRunnerStub = {
         connection: {
@@ -38,20 +38,20 @@ describe('Chip', () => {
       const firstParsedChip = saveStub.getCall(0).args[0][0];
       expect(firstParsedChip.id).to.equal(1);
       expect(firstParsedChip.name).to.equal('name');
-      expect(firstParsedChip.category).to.equal('cat');
+      expect(firstParsedChip.category).to.equal('std');
       expect(firstParsedChip.rarity).to.equal(2);
       expect(firstParsedChip.damage).to.equal(3);
-      expect(firstParsedChip.element).to.equal('elem');
+      expect(firstParsedChip.element).to.equal('aqua');
     });
 
     it('skips blank lines in csv gracefully', async () => {
-      mock({ fakeCSVFile: '\n\nid,name,category,rarity,damage,element\n\n\n1,name,cat,2,3,elem\n\n' });
+      mock({ fakeCSVFile: '\n\nid,name,category,rarity,damage,element\n\n\n1,name,std,2,3,aqua\n\n' });
       await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
       assert.calledOnce(saveStub);
     });
 
     it('rejects malformed csv when missing an item column', async () => {
-      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,cat,2,3' });
+      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,2,3' });
       try {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
         expect.fail('Did not throw');
@@ -59,7 +59,7 @@ describe('Chip', () => {
     });
 
     it('rejects malformed csv when extra item column', async () => {
-      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,cat,2,3,elem,extradata' });
+      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,2,3,aqua,extradata' });
       try {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
         expect.fail('Did not throw');
@@ -67,17 +67,17 @@ describe('Chip', () => {
     });
 
     it('rejects malformed csv when number column does not parse correctly', async () => {
-      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\nnotNumber,name,cat,2,3,elem,extradata' });
+      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\nnotNumber,name,std,2,3,aqua' });
       try {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
         expect.fail('Did not throw');
       } catch (e) {} // eslint-disable-line no-empty
-      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,cat,notNumber,3,elem,extradata' });
+      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,notNumber,3,aqua' });
       try {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
         expect.fail('Did not throw');
       } catch (e) {} // eslint-disable-line no-empty
-      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,cat,2,notNumber,elem,extradata' });
+      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,2,notNumber,aqua' });
       try {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
         expect.fail('Did not throw');
