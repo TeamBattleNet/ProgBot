@@ -15,7 +15,7 @@ const singletonClient = new ChatClient(
     onRefresh: async ({ accessToken, refreshToken }) => await Config.updateTwitchAuthTokens(accessToken, refreshToken),
   }),
   {
-    logger: { emoji: false, minLevel: 'INFO' },
+    logger: { emoji: false, minLevel: 'DEBUG' },
   }
 );
 
@@ -142,3 +142,4 @@ export class TwitchClient {
 
 singletonClient.onRegister(TwitchClient.postRegistration);
 singletonClient.onMessage(TwitchClient.handleMessage);
+singletonClient.onAuthenticationFailure((msg) => logger.warn(`Auth failure. msg: ${msg}`));
