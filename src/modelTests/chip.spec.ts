@@ -14,6 +14,49 @@ describe('Chip', () => {
     sandbox.restore();
   });
 
+  describe('loadCache', () => {
+    let findStub: SinonStub;
+
+    beforeEach(() => {
+      findStub = sandbox.stub(Chip, 'find').resolves([]);
+    });
+
+    afterEach(() => (Chip.chipCache = {}));
+
+    it('Clears the existing cache', async () => {
+      Chip.chipCache['123'] = new Chip();
+      await Chip.loadCache();
+      expect(Chip.chipCache).to.deep.equal({});
+    });
+
+    it('Fills the cache with found chips', async () => {
+      const myChip = new Chip();
+      myChip.id = 123;
+      findStub.resolves([myChip]);
+      await Chip.loadCache();
+      assert.calledOnce(findStub);
+      expect(Chip.chipCache[123]).to.equal(myChip);
+    });
+  });
+
+  describe('getById', () => {
+    afterEach(() => (Chip.chipCache = {}));
+
+    it('Returns chip from cache if it exists', () => {
+      const myChip = new Chip();
+      Chip.chipCache['123'] = myChip;
+      expect(Chip.getById('123')).to.equal(myChip);
+      expect(Chip.getById(123)).to.equal(myChip);
+    });
+
+    it('Throws an error if the request chip does not exist', () => {
+      try {
+        Chip.getById('123');
+        expect.fail('Did not throw');
+      } catch (e) {} // eslint-disable-line no-empty
+    });
+  });
+
   describe('csvChipDBImport', () => {
     let queryRunnerStub: any;
     let saveStub: SinonStub;

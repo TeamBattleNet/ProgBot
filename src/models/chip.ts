@@ -27,7 +27,8 @@ export class Chip extends BaseEntity {
   @Column()
   element: ChipElement;
 
-  private static chipCache: { [id: string]: Chip | undefined } = {};
+  // Only public for testing purposes
+  public static chipCache: { [id: string]: Chip | undefined } = {};
 
   // This should be called upon boot of the application
   // It will load the whole chip table from the db into memory for quick access
