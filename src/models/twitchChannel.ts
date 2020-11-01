@@ -6,7 +6,13 @@ export class TwitchChannel extends BaseEntity {
   channel: string;
 
   // Disabled commands will be stored as a comma separated varchar string in the DB
-  @Column({ type: 'varchar', transformer: { from: (val: string) => new Set(val.split(',')), to: (val: Set<string>) => [...val].join(',') } })
+  @Column({
+    type: 'varchar',
+    transformer: {
+      from: (val: string) => new Set(val.split(',')),
+      to: (val: Set<string>) => [...val].join(','),
+    },
+  })
   disabledCommands: Set<string>;
 
   @Column({ default: 0 })
