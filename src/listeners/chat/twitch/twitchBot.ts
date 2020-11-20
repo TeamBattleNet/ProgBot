@@ -15,7 +15,7 @@ const singletonClient = new ChatClient(
     onRefresh: async ({ accessToken, refreshToken }) => await Config.updateTwitchAuthTokens(accessToken, refreshToken),
   }),
   {
-    logger: { emoji: false, minLevel: 'DEBUG' },
+    logger: { emoji: false },
   }
 );
 
@@ -59,13 +59,7 @@ export class TwitchClient {
     // Join channels here
     const channels = await TwitchChannel.getAllChannels();
     // Make sure we have/bootstrap the bot's own channel
-    let hasOwnChannel = false;
-    for (const channel of channels) {
-      if (channel.channel === TwitchClient.username) {
-        hasOwnChannel = true;
-        break;
-      }
-    }
+    const hasOwnChannel = channels.some((chan) => chan.channel === TwitchClient.username);
     if (!hasOwnChannel) channels.push(await TwitchChannel.createNewChannel(TwitchClient.username));
     // Actually join the channels now
     await Promise.all(
@@ -142,4 +136,3 @@ export class TwitchClient {
 
 singletonClient.onRegister(TwitchClient.postRegistration);
 singletonClient.onMessage(TwitchClient.handleMessage);
-singletonClient.onAuthenticationFailure((msg) => logger.warn(`Auth failure. msg: ${msg}`));
