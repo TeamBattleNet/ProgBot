@@ -35,6 +35,7 @@
     "loglevel-plugin-prefix": "^0.8.4",
     "source-map-support": "^0.5.19",
     "tslib": "^2.1.0",
+    "twitch": "^4.5.2",
     "twitch-auth": "^4.5.2",
     "twitch-chat-client": "^4.5.2",
     "typeorm": "^0.2.31",
@@ -61,7 +62,6 @@
     "prettier": "^2.2.1",
     "sinon": "^10.0.0",
     "ts-node": "^9.1.1",
-    "twitch": "^4.5.2",
     "typescript": "^4.2.3"
   },
   "nyc": {
@@ -84,8 +84,7 @@
     "extends": [
       "eslint:recommended",
       "plugin:@typescript-eslint/recommended",
-      "prettier",
-      "prettier/@typescript-eslint"
+      "prettier"
     ],
     "env": {
       "browser": false,

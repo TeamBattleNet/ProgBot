@@ -6,6 +6,7 @@ import { startWebserver, stopWebserver } from './listeners/webserver/server';
 import { DiscordClient } from './listeners/chat/discord/discordBot';
 import { TwitchClient } from './listeners/chat/twitch/twitchBot';
 import { initializeChatBotHandlers } from './listeners/chat';
+import { scheduleStreamAnnouncer, unscheduleStreamAnnouncer } from './listeners/streamwatcher/streamAnnouncer';
 import { getLogger } from './logger';
 const logger = getLogger('main');
 
@@ -21,6 +22,7 @@ async function main() {
   await TwitchClient.connect();
   logger.info('Connecting to discord');
   await DiscordClient.connect();
+  scheduleStreamAnnouncer();
 }
 
 let stopSignalReceived = false;
@@ -32,6 +34,7 @@ export async function shutdown() {
   stopSignalReceived = true;
   logger.info('Shutting down - stop signal received');
   // Clean up and shutdown stuff here
+  unscheduleStreamAnnouncer();
   await DiscordClient.shutdown();
   await TwitchClient.shutdown();
   await stopWebserver();
