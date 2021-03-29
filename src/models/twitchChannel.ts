@@ -9,7 +9,7 @@ export class TwitchChannel extends BaseEntity {
   @Column({
     type: 'varchar',
     transformer: {
-      from: (val: string) => new Set(val.split(',')),
+      from: (val: string) => new Set(val.split(',').filter(Boolean)),
       to: (val: Set<string>) => [...val].join(','),
     },
   })

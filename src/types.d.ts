@@ -15,3 +15,4 @@ export type CommandCategory = 'Accounts' | 'Help' | 'General' | 'Simple' | 'Admi
 
 export type ChipElement = 'none' | 'aqua' | 'wind' | 'elec' | 'wood' | 'fire' | 'obj' | 'recov' | 'break' | 'sword' | 'invis' | 'num' | 'search' | 'ground';
 export type ChipCategory = 'std' | 'mega' | 'navi' | 'giga' | 'dark';
+export type StyleType = 'placeholderStyle1' | 'placeholderStyle2' | 'placeholderStyle3';

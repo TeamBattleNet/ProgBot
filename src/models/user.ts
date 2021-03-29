@@ -1,6 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, Generated, BaseEntity } from 'typeorm';
 import { Database } from '../clients/database';
 import { v4 as uuidv4 } from 'uuid';
+import { getRandomStyle } from '../utils';
+import { StyleType } from '../types';
 
 const isUUID = /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i;
 
@@ -67,6 +69,9 @@ export class User extends BaseEntity {
   })
   battlechips: BattleChips;
 
+  @Column({ nullable: true })
+  style?: StyleType;
+
   @Column()
   lastBrowseTime: Date;
 
@@ -105,6 +110,12 @@ export class User extends BaseEntity {
     return randomToken;
   }
 
+  public async assignRandomStyle() {
+    this.style = getRandomStyle();
+    await this.save();
+    return this.style;
+  }
+
   public static async findByDiscordId(discordId: string) {
     return User.findOne({ where: { discordUserId: discordId } });
   }
@@ -130,6 +141,8 @@ export class User extends BaseEntity {
       battlechips.getAllCounts().forEach(([id, count]) => combinedBattleChips.setCount(id, combinedBattleChips.getCount(id) + count))
     );
     combinedUser.battlechips = combinedBattleChips;
+    // Always take style from twitch user
+    combinedUser.style = twitchUser.style;
     combinedUser.lastBrowseTime = twitchUser.lastBrowseTime > discordUser.lastBrowseTime ? twitchUser.lastBrowseTime : discordUser.lastBrowseTime;
     // Delete the old users and save the new combined one
     await Database.connection.transaction(async (transactionManager) => {
