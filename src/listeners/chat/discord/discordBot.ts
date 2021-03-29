@@ -37,8 +37,8 @@ export class DiscordClient {
     await DiscordClient.client.user?.setPresence({ activity: { type: 'PLAYING', name: `on the net - ${DiscordClient.cmdPrefix}help` } });
   }
 
-  public static nowReady() {
-    logger.info(`Discord client ready. Invite: https://discordapp.com/oauth2/authorize?client_id=${DiscordClient.client.user?.id}&scope=bot&permissions=8`);
+  public static async nowReady() {
+    logger.info(`Discord client ready. Invite: ${await DiscordClient.client.generateInvite({ permissions: [discord.Permissions.FLAGS.ADMINISTRATOR] })}`);
   }
 
   public static async handleMessage(message: discord.Message) {
