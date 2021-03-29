@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AnnounceAndStyle1616989827312 implements MigrationInterface {
@@ -27,3 +28,4 @@ export class AnnounceAndStyle1616989827312 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE "announce_channel"`);
   }
 }
+/* eslint-enable */

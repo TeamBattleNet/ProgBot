@@ -41,6 +41,13 @@ export class DiscordClient {
     logger.info(`Discord client ready. Invite: ${await DiscordClient.client.generateInvite({ permissions: [discord.Permissions.FLAGS.ADMINISTRATOR] })}`);
   }
 
+  public static async sendMessage(channelId: string, message: string) {
+    const channel = DiscordClient.client.channels.cache.get(channelId) as discord.TextChannel;
+    if (!channel) throw new Error(`Discord channel ${channelId} could not be found when trying to send a message`);
+    if (!channel.isText()) throw new Error(`Trying to send message to discord channel ${channelId} which is not a text channel!`);
+    await channel.send(message);
+  }
+
   public static async handleMessage(message: discord.Message) {
     if (message.content.startsWith(DiscordClient.cmdPrefix)) {
       const { word: cmd, remain: param } = parseNextWord(message.content, DiscordClient.cmdPrefix.length);

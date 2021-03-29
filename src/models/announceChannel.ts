@@ -30,7 +30,10 @@ export class AnnounceChannel extends BaseEntity {
     announceChannel.channel = lowerChannel;
     announceChannel.announceTypes = new Set();
     const existingChannel = await AnnounceChannel.getChannel(channel);
-    if (existingChannel) announceChannel = existingChannel;
+    if (existingChannel) {
+      if (existingChannel.announceTypes.has('live')) throw new Error(`Channel ${channel} already marked for livestream announcement`);
+      announceChannel = existingChannel;
+    }
     announceChannel.announceTypes.add('live');
     await announceChannel.save();
   }

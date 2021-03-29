@@ -1,23 +1,14 @@
 import { parseNextWord } from '../shared/utils';
 import { Config } from '../../../clients/configuration';
+import { TwitchApi } from '../../../clients/twitch';
 import { TwitchChannel } from '../../../models/twitchChannel';
 import { getLogger } from '../../../logger';
-import { RefreshableAuthProvider, StaticAuthProvider } from 'twitch-auth';
 import { ChatClient, PrivateMessage } from 'twitch-chat-client';
 import type { CommandCategory } from '../../../types';
 
-const logger = getLogger('twitch');
+const logger = getLogger('twitchIRC');
 
-const singletonClient = new ChatClient(
-  new RefreshableAuthProvider(new StaticAuthProvider(Config.getConfig().twitch_app_client_id, Config.getConfig().twitch_bot_access_token), {
-    clientSecret: Config.getConfig().twitch_app_client_secret,
-    refreshToken: Config.getConfig().twitch_bot_refresh_token,
-    onRefresh: async ({ accessToken, refreshToken }) => await Config.updateTwitchAuthTokens(accessToken, refreshToken),
-  }),
-  {
-    logger: { emoji: false },
-  }
-);
+const singletonClient = new ChatClient(TwitchApi.AuthProvider, { logger: { emoji: false } });
 
 export type MsgHandler = (msg: PrivateMessage, param?: string) => Promise<string>;
 // param input in the handler is the parsed message content after trimming the prepended command.
