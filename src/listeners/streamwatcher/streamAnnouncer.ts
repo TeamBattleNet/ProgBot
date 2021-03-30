@@ -73,7 +73,7 @@ export async function checkAndAnnounceStreams() {
         for (const stream of streams) {
           if (announcedStreams[stream.id] === undefined) {
             // Check if we have already announced again because there can be duplicates in our streams array
-            const announceMessage = `${stream.user} is live playing: ${stream.game}\n<${stream.url}>\n${stream.title}`;
+            const announceMessage = `${stream.user.replace('_', '\\_')} is live playing: ${stream.game}\n<${stream.url}>\n\`\`\`${stream.title}\`\`\``;
             await Promise.all(announceChannels.map((chan) => DiscordClient.sendMessage(chan.channel, announceMessage)));
             announcedStreams[stream.id] = 0;
           }
