@@ -71,12 +71,16 @@ export async function checkAndAnnounceStreams() {
       const announceChannels = await AnnounceChannel.getLiveAnnounceChannels();
       if (announceChannels.length > 0) {
         for (const stream of streams) {
-          const announceMessage = `${stream.user} is live playing: ${stream.game}\n${stream.url}\n${stream.title}`;
-          await Promise.all(announceChannels.map((chan) => DiscordClient.sendMessage(chan.channel, announceMessage)));
-          announcedStreams[stream.id] = 0;
+          if (announcedStreams[stream.id] === undefined) { // Check if we have already announced again because there can be duplicates in our streams array
+            const announceMessage = `${stream.user} is live playing: ${stream.game}\n${stream.url}\n${stream.title}`;
+            await Promise.all(announceChannels.map((chan) => DiscordClient.sendMessage(chan.channel, announceMessage)));
+            announcedStreams[stream.id] = 0;
+          }
         }
       } else {
         logger.info('Found new streams with no announce channels');
+        // Mark as announced so we don't incidentally build up a backlog if no announce channel is set
+        streams.forEach(stream => announcedStreams[stream.id] = 0);
       }
     }
     logger.debug('Stream discovery/announce complete');
