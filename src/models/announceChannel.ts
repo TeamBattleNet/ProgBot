@@ -2,10 +2,11 @@ import { Entity, PrimaryColumn, Column, BaseEntity } from 'typeorm';
 
 @Entity()
 export class AnnounceChannel extends BaseEntity {
+  // Discord channel id for discord or twitch user ID for twitch channel
   @PrimaryColumn()
   channel: string;
 
-  // Disabled commands will be stored as a comma separated varchar string in the DB
+  // Announce types will be stored as a comma separated varchar string in the DB
   @Column({
     type: 'varchar',
     transformer: {
@@ -20,21 +21,40 @@ export class AnnounceChannel extends BaseEntity {
     return allChannels.filter((chan) => chan.announceTypes.has('live'));
   }
 
+  public static async getStreamDetectionChannels() {
+    const allChannels = await AnnounceChannel.find();
+    return allChannels.filter((chan) => chan.announceTypes.has('stream'));
+  }
+
   public static async getChannel(channel: string) {
     return AnnounceChannel.findOne({ where: { channel: channel.toLowerCase() } });
   }
 
-  public static async addNewLiveChannel(channel: string) {
-    const lowerChannel = channel.toLowerCase();
+  public static async addNewLiveChannel(discordChannel: string) {
+    const lowerChannel = discordChannel.toLowerCase();
     let announceChannel = new AnnounceChannel();
     announceChannel.channel = lowerChannel;
     announceChannel.announceTypes = new Set();
-    const existingChannel = await AnnounceChannel.getChannel(channel);
+    const existingChannel = await AnnounceChannel.getChannel(discordChannel);
     if (existingChannel) {
-      if (existingChannel.announceTypes.has('live')) throw new Error(`Channel ${channel} already marked for livestream announcement`);
+      if (existingChannel.announceTypes.has('live')) throw new Error(`Channel ${discordChannel} already marked for livestream announcement`);
       announceChannel = existingChannel;
     }
     announceChannel.announceTypes.add('live');
+    await announceChannel.save();
+  }
+
+  public static async addNewStreamChannel(twitchID: string) {
+    const lowerChannel = twitchID.toLowerCase();
+    let announceChannel = new AnnounceChannel();
+    announceChannel.channel = lowerChannel;
+    announceChannel.announceTypes = new Set();
+    const existingChannel = await AnnounceChannel.getChannel(twitchID);
+    if (existingChannel) {
+      if (existingChannel.announceTypes.has('stream')) throw new Error(`Channel ${twitchID} already marked for stream detection`);
+      announceChannel = existingChannel;
+    }
+    announceChannel.announceTypes.add('stream');
     await announceChannel.save();
   }
 }

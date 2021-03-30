@@ -7,7 +7,8 @@ const logger = getLogger('StreamAnnouncer');
 const ANNOUNCE_CHECK_PERIOD_MS = 15000;
 let interval: any = undefined;
 const startTime = new Date();
-const announcedStreams = new Set<string>();
+// Keyed by stream id where number value is a miss-count for this stream when querying the api
+const announcedStreams: { [streamId: string]: number } = {};
 
 const mmbnGameTwitchIds = [
   '7542', // Mega Man Battle Network
@@ -50,24 +51,35 @@ const mmbnGameTwitchIds = [
 
 // Not intended to be called directly outside of this module, only exported for testing
 export async function checkAndAnnounceStreams() {
-  logger.trace('Starting check for streams');
+  logger.debug('Starting check for streams');
   try {
-    // Fetch all streams and filter out streams that were already announced, or started before the bot was started (prevent duplicates)
-    const streams = (await TwitchApi.getStreamsOfGames(mmbnGameTwitchIds)).filter((stream) => startTime < stream.start && !announcedStreams.has(stream.id));
+    const twitchChannels = (await AnnounceChannel.getStreamDetectionChannels()).map((chan) => chan.channel);
+    // Fetch all streams and filter out streams that started before the bot was started (prevent duplicates if/when rebooting bot)
+    let streams = (await TwitchApi.getStreamsOfUsers(twitchChannels)).concat(await TwitchApi.getStreamsOfGames(mmbnGameTwitchIds)).filter((stream) => startTime < stream.start);
+    logger.trace(`Streams before filtering: ${streams}`)
+    // Clean the announced cache by counting misses and removing streams that have been offline for some time
+    Object.keys(announcedStreams).forEach((streamId) => {
+      // Add miss-count to already announced stream if it didn't appear in our twitch api request
+      if (!streams.some((stream) => stream.id === streamId)) announcedStreams[streamId] += 1;
+      // Clear out streams from our announce cache that have been excluded from the API for the last few calls (are offline/completed)
+      if (announcedStreams[streamId] > 5) delete announcedStreams[streamId];
+    });
+    // Filter out streams that have already been announced
+    streams = streams.filter((stream) => announcedStreams[stream.id] === undefined);
     if (streams.length > 0) {
       logger.debug(`${streams.length} stream(s) to announce`);
       const announceChannels = await AnnounceChannel.getLiveAnnounceChannels();
       if (announceChannels.length > 0) {
         for (const stream of streams) {
-          const announceMessage = `${stream.user} is live playing ${stream.game}\n${stream.url}\n${stream.title}`;
+          const announceMessage = `${stream.user} is live playing: ${stream.game}\n${stream.url}\n${stream.title}`;
           await Promise.all(announceChannels.map((chan) => DiscordClient.sendMessage(chan.channel, announceMessage)));
-          announcedStreams.add(stream.id);
+          announcedStreams[stream.id] = 0;
         }
       } else {
         logger.info('Found new streams with no announce channels');
       }
     }
-    logger.trace('Stream discovery/announce complete');
+    logger.debug('Stream discovery/announce complete');
   } catch (e) {
     logger.error('Unexpected error fetching/announcing streams:', e);
   }
