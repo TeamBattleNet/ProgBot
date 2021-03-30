@@ -56,7 +56,7 @@ export async function checkAndAnnounceStreams() {
     const twitchChannels = (await AnnounceChannel.getStreamDetectionChannels()).map((chan) => chan.channel);
     // Fetch all streams and filter out streams that started before the bot was started (prevent duplicates if/when rebooting bot)
     let streams = (await TwitchApi.getStreamsOfUsers(twitchChannels)).concat(await TwitchApi.getStreamsOfGames(mmbnGameTwitchIds)).filter((stream) => startTime < stream.start);
-    logger.trace(`Streams before filtering: ${streams}`)
+    logger.trace(`Streams before filtering: ${streams}`);
     // Clean the announced cache by counting misses and removing streams that have been offline for some time
     Object.keys(announcedStreams).forEach((streamId) => {
       // Add miss-count to already announced stream if it didn't appear in our twitch api request
