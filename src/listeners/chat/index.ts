@@ -16,6 +16,7 @@ import { registerDiscord } from './discord/register';
 import { generateApiKey } from './discord/apiKey';
 import { makeAnnounceChannel, removeAnnounceChannel } from './discord/liveAnnounce';
 import { addTwitchStreamLiveChannel, removeTwitchStreamLiveChannel, listTwitchStreamLiveChannel } from './shared/liveChannel';
+import { streams } from './shared/streams';
 import { registerTwitch } from './twitch/register';
 import { shutdownCmd } from './shared/shutdown';
 import { ping } from './shared/ping';
@@ -41,6 +42,7 @@ export async function initializeChatBotHandlers() {
   registerCommonAdminCommand(addTwitchStreamLiveChannel);
   registerCommonAdminCommand(removeTwitchStreamLiveChannel);
   registerCommonAdminCommand(listTwitchStreamLiveChannel);
+  registerCommonAnonymousCommand(streams);
 
   // Misc
   registerCommonAdminCommand(shutdownCmd);
