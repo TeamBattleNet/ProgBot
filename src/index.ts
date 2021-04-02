@@ -4,7 +4,8 @@ import { Database } from './clients/database';
 import { Chip } from './models/chip';
 import { startWebserver, stopWebserver } from './listeners/webserver/server';
 import { DiscordClient } from './listeners/chat/discord/discordBot';
-import { TwitchClient } from './listeners/chat/twitch/twitchBot';
+import { TwitchIRCClient } from './listeners/chat/twitch/twitchIRC';
+import { TwitchEventClient } from './listeners/pubsub/twitchEvents';
 import { initializeChatBotHandlers } from './listeners/chat';
 import { scheduleStreamAnnouncer, unscheduleStreamAnnouncer } from './listeners/streamwatcher/streamAnnouncer';
 import { getLogger } from './logger';
@@ -19,7 +20,8 @@ async function main() {
   await startWebserver();
   await initializeChatBotHandlers();
   logger.info('Connecting to twitch');
-  await TwitchClient.connect();
+  await TwitchIRCClient.connect();
+  await TwitchEventClient.connect();
   logger.info('Connecting to discord');
   await DiscordClient.connect();
   scheduleStreamAnnouncer();
@@ -36,7 +38,8 @@ export async function shutdown() {
   // Clean up and shutdown stuff here
   unscheduleStreamAnnouncer();
   await DiscordClient.shutdown();
-  await TwitchClient.shutdown();
+  await TwitchEventClient.shutdown();
+  await TwitchIRCClient.shutdown();
   await stopWebserver();
   await Database.shutdown();
   process.exit(0);

@@ -1,7 +1,7 @@
 import { CommonAnonymousCommand, CommonAdminCommand, registerCommonAnonymousCommand } from './common';
 import { wrap, parseNextWord, getEmote } from './utils';
 import { DiscordClient } from '../discord/discordBot';
-import { TwitchClient } from '../twitch/twitchBot';
+import { TwitchIRCClient } from '../twitch/twitchIRC';
 import { SimpleCommand } from '../../../models/simpleCommand';
 
 const emoteReplaceRegex = /emote:[^ ]+/gm;
@@ -65,7 +65,7 @@ export const addSimpleCommand: CommonAdminCommand = {
     const { word: cmd, remain: reply } = parseNextWord(param);
     if (!reply) return invalidSyntaxMessage;
     // Ensure this command does not already exist on a bot
-    if (TwitchClient.doesCommandExist(cmd) || DiscordClient.doesCommandExist(cmd)) return `Command ${wrap(ctx, cmd)} already exists. Will not overwrite.`;
+    if (TwitchIRCClient.doesCommandExist(cmd) || DiscordClient.doesCommandExist(cmd)) return `Command ${wrap(ctx, cmd)} already exists. Will not overwrite.`;
     for (const match of reply.match(emoteReplaceRegex) || []) {
       const emoteName = match.substring(6);
       if (!getEmote({ chatType: 'discord' }, emoteName) || !getEmote({ chatType: 'twitch' }, emoteName)) return `Error: Could not find emote ${wrap(ctx, emoteName)}`;
@@ -88,7 +88,7 @@ export const removeSimpleCommand: CommonAdminCommand = {
     const existingCmd = await SimpleCommand.getByCmd(param);
     if (!existingCmd) return `Could not find simple command ${wrap(ctx, param)} to remove`;
     await existingCmd.remove();
-    TwitchClient.removeCommand(param);
+    TwitchIRCClient.removeCommand(param);
     DiscordClient.removeCommand(param);
     return `Removed simple command ${wrap(ctx, param)} with reply:\n${existingCmd.reply}`;
   },

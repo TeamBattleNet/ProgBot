@@ -1,6 +1,6 @@
 import { DiscordClient } from '../chat/discord/discordBot';
 import { AnnounceChannel } from '../../models/announceChannel';
-import { TwitchApi } from '../../clients/twitch';
+import { TwitchApi } from '../../clients/twitchApi';
 import { getLogger } from '../../logger';
 const logger = getLogger('StreamAnnouncer');
 

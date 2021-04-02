@@ -1,6 +1,6 @@
 import { parseNextWord } from '../shared/utils';
 import { Config } from '../../../clients/configuration';
-import { TwitchApi } from '../../../clients/twitch';
+import { TwitchApi } from '../../../clients/twitchApi';
 import { TwitchChannel } from '../../../models/twitchChannel';
 import { getLogger } from '../../../logger';
 import { ChatClient, PrivateMessage } from 'twitch-chat-client';
@@ -21,7 +21,7 @@ export interface TwitchCommand {
   handler: MsgHandler;
 }
 
-export class TwitchClient {
+export class TwitchIRCClient {
   public static client = singletonClient;
   public static cmdPrefix = Config.getConfig().twitch_bot_cmd_prefix || '!';
   public static username = '';
@@ -36,27 +36,27 @@ export class TwitchClient {
   private static channelsCache: { [channel: string]: TwitchChannel | undefined } = {};
 
   public static async connect() {
-    await TwitchClient.client.connect();
+    await TwitchIRCClient.client.connect();
   }
 
   public static async postRegistration() {
-    if (!TwitchClient.client.currentNick) {
+    if (!TwitchIRCClient.client.currentNick) {
       // Should never happen unless there is an issue with the IRC client
       logger.error('Twitch irc registration complete but nick not defined');
       return;
     }
-    TwitchClient.username = TwitchClient.client.currentNick.toLowerCase();
-    logger.info(`Twitch user ${TwitchClient.username} logged into chat`);
+    TwitchIRCClient.username = TwitchIRCClient.client.currentNick.toLowerCase();
+    logger.info(`Twitch user ${TwitchIRCClient.username} logged into chat`);
     // Join channels here
     const channels = await TwitchChannel.getAllChannels();
     // Make sure we have/bootstrap the bot's own channel
-    const hasOwnChannel = channels.some((chan) => chan.channel === TwitchClient.username);
-    if (!hasOwnChannel) channels.push(await TwitchChannel.createNewChannel(TwitchClient.username));
+    const hasOwnChannel = channels.some((chan) => chan.channel === TwitchIRCClient.username);
+    if (!hasOwnChannel) channels.push(await TwitchChannel.createNewChannel(TwitchIRCClient.username));
     // Actually join the channels now
     await Promise.all(
       channels.map(async (channel) => {
         try {
-          await TwitchClient.joinChannel(channel);
+          await TwitchIRCClient.joinChannel(channel);
         } catch {
           logger.error(`Failed to join twitch channel ${channel.channel}`);
         }
@@ -66,45 +66,45 @@ export class TwitchClient {
 
   public static async joinChannel(channel: TwitchChannel) {
     const chan = `#${channel.channel}`;
-    await TwitchClient.client.join(chan);
-    TwitchClient.channelsCache[channel.channel] = channel; // Add connected channel to cache
-    TwitchClient.client.say(chan, 'Logging on and jacking in!');
+    await TwitchIRCClient.client.join(chan);
+    TwitchIRCClient.channelsCache[channel.channel] = channel; // Add connected channel to cache
+    TwitchIRCClient.client.say(chan, 'Logging on and jacking in!');
     logger.info(`Joined twitch channel ${channel.channel}`);
   }
 
   public static leaveChannel(channel: string) {
     channel = channel.toLowerCase();
-    TwitchClient.client.part(`#${channel}`);
-    delete TwitchClient.channelsCache[channel];
+    TwitchIRCClient.client.part(`#${channel}`);
+    delete TwitchIRCClient.channelsCache[channel];
   }
 
   public static getTwitchChannelFromCache(channel: string) {
     const formatted = channel.startsWith('#') ? channel.substring(1).toLowerCase() : channel.toLowerCase();
-    const chan = TwitchClient.channelsCache[formatted];
+    const chan = TwitchIRCClient.channelsCache[formatted];
     if (!chan) throw new Error(`Could not find channel ${formatted} in cache`);
     return chan;
   }
 
   public static async handleMessage(_chan: string, _usr: string, _msg: string, msg: PrivateMessage) {
-    if (msg.message.value.startsWith(TwitchClient.cmdPrefix)) {
+    if (msg.message.value.startsWith(TwitchIRCClient.cmdPrefix)) {
       const channel = msg.target.value.substring(1).toLowerCase();
-      const { word: cmd, remain: param } = parseNextWord(msg.message.value, TwitchClient.cmdPrefix.length);
+      const { word: cmd, remain: param } = parseNextWord(msg.message.value, TwitchIRCClient.cmdPrefix.length);
       logger.trace(`cmd: '${cmd}' params: '${param}' channel: '${channel}' user: ${msg.userInfo.userName}`);
-      if (TwitchClient.commands[cmd] && !TwitchClient.channelsCache[channel]?.isDisabledCommand(cmd)) {
+      if (TwitchIRCClient.commands[cmd] && !TwitchIRCClient.channelsCache[channel]?.isDisabledCommand(cmd)) {
         try {
-          const reply = await TwitchClient.commands[cmd].handler(msg, param);
-          if (reply) TwitchClient.client.say(msg.target.value, reply);
+          const reply = await TwitchIRCClient.commands[cmd].handler(msg, param);
+          if (reply) TwitchIRCClient.client.say(msg.target.value, reply);
         } catch (e) {
           logger.error(e);
-          TwitchClient.client.say(msg.target.value, 'Internal Error');
+          TwitchIRCClient.client.say(msg.target.value, 'Internal Error');
         }
       }
     }
   }
 
   public static registerCommand(command: TwitchCommand) {
-    if (TwitchClient.commands[command.cmd]) throw new Error(`Command handler for cmd ${command.cmd} already registered!`);
-    TwitchClient.commands[command.cmd] = {
+    if (TwitchIRCClient.commands[command.cmd]) throw new Error(`Command handler for cmd ${command.cmd} already registered!`);
+    TwitchIRCClient.commands[command.cmd] = {
       category: command.category,
       desc: command.shortDescription,
       usage: command.usageInfo,
@@ -113,17 +113,18 @@ export class TwitchClient {
   }
 
   public static doesCommandExist(cmd: string) {
-    return Boolean(TwitchClient.commands[cmd]);
+    return Boolean(TwitchIRCClient.commands[cmd]);
   }
 
   public static removeCommand(cmd: string) {
-    delete TwitchClient.commands[cmd];
+    delete TwitchIRCClient.commands[cmd];
   }
 
   public static async shutdown() {
-    await TwitchClient.client.quit();
+    await TwitchIRCClient.client.quit();
   }
 }
 
-singletonClient.onRegister(TwitchClient.postRegistration);
-singletonClient.onMessage(TwitchClient.handleMessage);
+singletonClient.onRegister(TwitchIRCClient.postRegistration);
+singletonClient.onMessage(TwitchIRCClient.handleMessage);
+singletonClient.onAnyMessage(logger.trace);

@@ -20,7 +20,8 @@ The schema of this configuration file is as follows:
   "twitch_app_client_secret": "appClientSecret",
   "twitch_bot_access_token": "botOauthAccessToken",
   "twitch_bot_refresh_token": "botOauthRefreshToken",
-  "twitch_bot_cmd_prefix": "!"
+  "twitch_bot_cmd_prefix": "!",
+  "url_base": "https://my.site.com/" // used for callback when granting twitch oauth
 }
 ```
 
