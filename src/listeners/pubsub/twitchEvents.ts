@@ -13,7 +13,15 @@ export class TwitchEventClient {
 
   public static async connect() {
     const channels = await TwitchChannel.getChannelPointChannels();
-    await Promise.all(channels.map(TwitchEventClient.addNewChannelPointsListener));
+    await Promise.all(
+      channels.map(async (channel) => {
+        try {
+          await TwitchEventClient.addNewChannelPointsListener(channel);
+        } catch (e) {
+          logger.error(`Could not enable channel points listener for ${channel.channel}: ${e}`);
+        }
+      })
+    );
   }
 
   public static async addNewChannelPointsListener(channel: TwitchChannel) {
@@ -30,8 +38,12 @@ export class TwitchEventClient {
   }
 
   public static async redemptionHandler(msg: PubSubRedemptionMessage) {
-    // placeholder for now
-    logger.info(msg);
+    try {
+      // placeholder for now
+      logger.info(msg);
+    } catch (e) {
+      logger.error(e);
+    }
   }
 
   public static async shutdown() {
