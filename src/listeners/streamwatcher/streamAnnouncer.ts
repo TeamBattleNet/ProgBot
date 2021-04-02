@@ -49,9 +49,10 @@ const mmbnGameTwitchIds = [
 ];
 
 export async function getActiveStreams() {
+  const gameStreams = TwitchApi.getStreamsOfGames(mmbnGameTwitchIds);
   const twitchChannelIds = (await AnnounceChannel.getStreamDetectionChannels()).map((chan) => chan.channel);
   // Fetch all streams for individual channels and games
-  const streams = (await TwitchApi.getStreamsOfUsers(twitchChannelIds)).concat(await TwitchApi.getStreamsOfGames(mmbnGameTwitchIds));
+  const streams = (await Promise.all([TwitchApi.getStreamsOfUsers(twitchChannelIds), gameStreams])).flat();
   // Streams array can have duplicates; only return unique streams
   const existingIds = new Set<string>();
   return streams.filter((stream) => {
