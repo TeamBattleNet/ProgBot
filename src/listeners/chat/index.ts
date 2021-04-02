@@ -1,7 +1,7 @@
 import { registerCommonAnonymousCommand, registerCommonRegisteredCommand, registerCommonAdminCommand } from './shared/common';
 import * as accountLink from './shared/accountLink';
 import { DiscordClient } from './discord/discordBot';
-import { TwitchClient } from './twitch/twitchBot';
+import { TwitchIRCClient } from './twitch/twitchIRC';
 import {
   enableCmdOnChannel,
   disableCmdOnChannel,
@@ -11,6 +11,9 @@ import {
   listAllowedTwitchChannels,
   reloadAllowedTwitchChannels,
   removeAllowedTwitchChannel,
+  addChannelPointsIntegration,
+  removeChannelPointsIntegration,
+  listChannelPointsIntegrations,
 } from './twitch/twitchChannel';
 import { registerDiscord } from './discord/register';
 import { generateApiKey } from './discord/apiKey';
@@ -57,17 +60,20 @@ export async function initializeChatBotHandlers() {
   DiscordClient.registerCommand(generateApiKey);
   // cannot whisper with twitch bots right now, so we can't privately send api keys to users in twitch Ref: https://github.com/tmijs/tmi.js/issues/333
   DiscordClient.registerCommand(registerDiscord);
-  TwitchClient.registerCommand(registerTwitch);
+  TwitchIRCClient.registerCommand(registerTwitch);
   registerCommonRegisteredCommand(accountLink.startLinkCommon);
   registerCommonRegisteredCommand(accountLink.confirmLinkCommon);
 
   // Twitch Channels
-  TwitchClient.registerCommand(enableCmdOnChannel);
-  TwitchClient.registerCommand(disableCmdOnChannel);
-  TwitchClient.registerCommand(listDisabledCmdsOnChannel);
-  TwitchClient.registerCommand(setMinBrowseTime);
+  TwitchIRCClient.registerCommand(enableCmdOnChannel);
+  TwitchIRCClient.registerCommand(disableCmdOnChannel);
+  TwitchIRCClient.registerCommand(listDisabledCmdsOnChannel);
+  TwitchIRCClient.registerCommand(setMinBrowseTime);
   registerCommonAdminCommand(addAllowedTwitchChannel);
   registerCommonAdminCommand(removeAllowedTwitchChannel);
   registerCommonAdminCommand(listAllowedTwitchChannels);
   registerCommonAdminCommand(reloadAllowedTwitchChannels);
+  registerCommonAdminCommand(addChannelPointsIntegration);
+  registerCommonAdminCommand(removeChannelPointsIntegration);
+  registerCommonAdminCommand(listChannelPointsIntegrations);
 }

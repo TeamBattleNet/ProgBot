@@ -1,4 +1,4 @@
-import { TwitchApi } from '../../../clients/twitch';
+import { TwitchApi } from '../../../clients/twitchApi';
 import { CommonAdminCommand } from './common';
 import { AnnounceChannel } from '../../../models/announceChannel';
 

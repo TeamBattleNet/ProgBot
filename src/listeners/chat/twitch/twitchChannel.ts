@@ -1,4 +1,6 @@
-import { TwitchClient, TwitchCommand } from './twitchBot';
+import { TwitchApi } from '../../../clients/twitchApi';
+import { TwitchEventClient } from '../../pubsub/twitchEvents';
+import { TwitchIRCClient, TwitchCommand } from './twitchIRC';
 import { CommonAdminCommand } from '../shared/common';
 import { TwitchChannel } from '../../../models/twitchChannel';
 import { sleep } from '../../../utils';
@@ -15,7 +17,7 @@ export const disableCmdOnChannel: TwitchCommand = {
     // Make action only available to channel owner (broadcaster) or channel mods
     if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return 'Permission denied';
     if (!param || param.indexOf(',') !== -1) return 'Invalid syntax. Please provide a command to disable';
-    const channel = TwitchClient.getTwitchChannelFromCache(msg.target.value);
+    const channel = TwitchIRCClient.getTwitchChannelFromCache(msg.target.value);
     await channel.addDisabledCommands([param]);
     return `Command ${param} disabled on twitch channel ${channel.channel}`;
   },
@@ -30,7 +32,7 @@ export const enableCmdOnChannel: TwitchCommand = {
     // Make action only available to channel owner (broadcaster) or channel mods
     if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return 'Permission denied';
     if (!param) return 'Invalid syntax. Please provide a command to enable';
-    const channel = TwitchClient.getTwitchChannelFromCache(msg.target.value);
+    const channel = TwitchIRCClient.getTwitchChannelFromCache(msg.target.value);
     if (!channel.disabledCommands.has(param)) return `Command ${param} is not disabled!`;
     await channel.removeDisabledCommands([param]);
     return `Command ${param} re-enabled on twitch channel ${channel.channel}`;
@@ -45,7 +47,7 @@ export const listDisabledCmdsOnChannel: TwitchCommand = {
   handler: async (msg) => {
     // Make action only available to channel owner (broadcaster) or channel mods
     if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return 'Permission denied';
-    const channel = TwitchClient.getTwitchChannelFromCache(msg.target.value);
+    const channel = TwitchIRCClient.getTwitchChannelFromCache(msg.target.value);
     return `Disabled cmds: ${[...channel.disabledCommands].join(', ') || 'none'}`;
   },
 };
@@ -58,7 +60,7 @@ export const setMinBrowseTime: TwitchCommand = {
   handler: async (msg, param) => {
     // Make action only available to channel owner (broadcaster) or channel mods
     if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return 'Permission denied';
-    const channel = TwitchClient.getTwitchChannelFromCache(msg.target.value);
+    const channel = TwitchIRCClient.getTwitchChannelFromCache(msg.target.value);
     const num = Number.parseInt(param || '');
     if (isNaN(num)) return 'Please provide a valid number of seconds';
     await channel.setMinBrowseSeconds(num);
@@ -75,7 +77,7 @@ export const addAllowedTwitchChannel: CommonAdminCommand = {
     let channel: TwitchChannel | undefined = undefined;
     // Check if channel is in cache or db first
     try {
-      channel = TwitchClient.getTwitchChannelFromCache(param);
+      channel = TwitchIRCClient.getTwitchChannelFromCache(param);
     } catch {
       channel = await TwitchChannel.getChannel(param);
     }
@@ -83,7 +85,7 @@ export const addAllowedTwitchChannel: CommonAdminCommand = {
     // Create the new channel now that we confirmed it isn't already allowed
     channel = await TwitchChannel.createNewChannel(param);
     try {
-      await TwitchClient.joinChannel(channel);
+      await TwitchIRCClient.joinChannel(channel);
     } catch {
       // Failed to join the specified channel, remove it from the DB and return an error message
       await channel.remove();
@@ -102,12 +104,12 @@ export const removeAllowedTwitchChannel: CommonAdminCommand = {
     let channel: TwitchChannel | undefined = undefined;
     // Retrieve channel from cache (or db if cache misses)
     try {
-      channel = TwitchClient.getTwitchChannelFromCache(param);
+      channel = TwitchIRCClient.getTwitchChannelFromCache(param);
     } catch {
       channel = await TwitchChannel.getChannel(param);
     }
     if (!channel) return `Channel ${param} is not a currently allowed channel. Nothing to do`;
-    TwitchClient.leaveChannel(channel.channel);
+    TwitchIRCClient.leaveChannel(channel.channel);
     await channel.remove();
     return `Left twitch channel ${param} and removed it from the allowed list`;
   },
@@ -131,7 +133,7 @@ export const reloadAllowedTwitchChannels: CommonAdminCommand = {
     logger.info('Reloading twitch channels due to admin request');
     const separator = ctx.chatType === 'discord' ? '\n' : ' | ';
     const channels = await TwitchChannel.getAllChannels();
-    channels.forEach((chan) => TwitchClient.leaveChannel(chan.channel));
+    channels.forEach((chan) => TwitchIRCClient.leaveChannel(chan.channel));
     let response = `Left channels: ${channels.map((x) => x.channel).join(', ') || 'none'}${separator}`;
     await sleep(3000); // Wait some time after leaving channels to ensure proper PART
     const successfullyJoinedChannels: string[] = [];
@@ -139,7 +141,7 @@ export const reloadAllowedTwitchChannels: CommonAdminCommand = {
     await Promise.all(
       channels.map(async (chan) => {
         try {
-          await TwitchClient.joinChannel(chan);
+          await TwitchIRCClient.joinChannel(chan);
           successfullyJoinedChannels.push(chan.channel);
         } catch {
           failedJoinedChannels.push(chan.channel);
@@ -149,5 +151,47 @@ export const reloadAllowedTwitchChannels: CommonAdminCommand = {
     response += `Successfully Joined Channels: ${successfullyJoinedChannels.join(', ') || 'none'}${separator}`;
     response += `Failed to Join Channels: ${failedJoinedChannels.join(', ') || 'none'}`;
     return response;
+  },
+};
+
+export const addChannelPointsIntegration: CommonAdminCommand = {
+  cmd: 'addchannelpointsintegration',
+  shortDescription: 'Enable channel points integration for an allowed twitch channel',
+  usageInfo: 'usage: addchannelpointsintegration <channel>',
+  handler: async (ctx, user, param) => {
+    if (!param) return 'Invalid syntax, must provide a channel to join';
+    const channel = await TwitchChannel.getChannel(param);
+    if (!channel) return `${param} is not an allowed twitch channel. Please use addtwitchchannel first`;
+    if (channel.channelPointsIntegration) return `Channel ${param} already has channel point integration enabled. Nothing to do`;
+    if (!channel.accessToken || !channel.refreshToken)
+      return `Channel needs authorization before this can be enabled. Use this URL to authorize while logged into ${param}: ${await channel.getOauthURL()}`;
+    await channel.setChannelPointIntegration();
+    await TwitchEventClient.addNewChannelPointsListener(channel);
+    return `Channel point integrations have been successfully enabled for ${param}`;
+  },
+};
+
+export const removeChannelPointsIntegration: CommonAdminCommand = {
+  cmd: 'removechannelpointsintegration',
+  shortDescription: 'Remove channel points integration from a twitch channel',
+  usageInfo: 'usage: removechannelpointsintegration <channel>',
+  handler: async (ctx, user, param) => {
+    if (!param) return 'Invalid syntax, must provide a channel to remove';
+    const channel = await TwitchChannel.getChannel(param);
+    if (!channel || !channel.channelPointsIntegration) return `Channel ${param} does not currently have channel points integration enabled. Nothing to do`;
+    const userId = await TwitchApi.getTwitchUserID(channel.channel);
+    await channel.setChannelPointIntegration(false);
+    await TwitchEventClient.removeChannelPointsListener(userId);
+    return `Turned off channel point integration for: ${param}`;
+  },
+};
+
+export const listChannelPointsIntegrations: CommonAdminCommand = {
+  cmd: 'listchannelpointsintegrations',
+  shortDescription: 'List the twitch channels which have channel point integration enabled',
+  usageInfo: 'usage: listchannelpointsintegrations',
+  handler: async () => {
+    const channels = await TwitchChannel.getChannelPointChannels();
+    return `Channels: ${channels.map((x) => x.channel).join(', ') || 'none'}`;
   },
 };

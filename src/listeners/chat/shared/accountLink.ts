@@ -1,5 +1,5 @@
 import { DiscordClient } from '../discord/discordBot';
-import { TwitchClient } from '../twitch/twitchBot';
+import { TwitchIRCClient } from '../twitch/twitchIRC';
 import { CommonRegisteredCommand } from './common';
 import { User } from '../../../models/user';
 
@@ -16,7 +16,7 @@ export const startLinkCommon: CommonRegisteredCommand = {
   handler: async (ctx, user, param) => {
     if (user.hasTwitchId() && user.hasDiscordId()) return 'You have already linked your twitch and discord accounts!';
     const otherService = ctx.chatType === 'twitch' ? 'discord' : 'twitch';
-    const cmdPrefix = ctx.chatType === 'twitch' ? TwitchClient.cmdPrefix : DiscordClient.cmdPrefix;
+    const cmdPrefix = ctx.chatType === 'twitch' ? TwitchIRCClient.cmdPrefix : DiscordClient.cmdPrefix;
     const providedUsername = param?.toLowerCase() || '';
     if ((ctx.chatType === 'discord' && !providedUsername) || (ctx.chatType === 'twitch' && !providedUsername.match(discordUsernameCheckRegex)))
       return `You must specify the ${otherService} username you wish to link (${cmdPrefix}help startlink)`;
@@ -24,7 +24,7 @@ export const startLinkCommon: CommonRegisteredCommand = {
     if (ctx.chatType === 'twitch') {
       return `Link started! Type '${DiscordClient.cmdPrefix}confirmlink ${randomToken}' from the discord account ${providedUsername} in the teambn discord server https://discord.teambn.net`;
     } else {
-      return `Link started! Type \`${TwitchClient.cmdPrefix}confirmlink ${randomToken}\` from the twitch account '${providedUsername}' in my chat: https://www.twitch.tv/${TwitchClient.username}`;
+      return `Link started! Type \`${TwitchIRCClient.cmdPrefix}confirmlink ${randomToken}\` from the twitch account ${providedUsername} in my chat: https://www.twitch.tv/${TwitchIRCClient.username}`;
     }
   },
 };
@@ -40,7 +40,7 @@ export const confirmLinkCommon: CommonRegisteredCommand = {
   handler: async (ctx, user, param) => {
     if (user.hasTwitchId() && user.hasDiscordId()) return 'This account is already linked and cannot be re-linked!';
     const otherService = ctx.chatType === 'twitch' ? 'discord' : 'twitch';
-    const cmdPrefix = ctx.chatType === 'twitch' ? TwitchClient.cmdPrefix : DiscordClient.cmdPrefix;
+    const cmdPrefix = ctx.chatType === 'twitch' ? TwitchIRCClient.cmdPrefix : DiscordClient.cmdPrefix;
     if (!param) return `You must specify the token provided when starting the link from ${otherService} (${cmdPrefix}help confirmlink)`;
     let twitchUser: User | undefined = undefined;
     let discordUser: User | undefined = undefined;

@@ -6,6 +6,8 @@ const logger = getLogger('webserver_error_handler');
 function getError(err: any) {
   const returnError = { code: err.code, error: err.message };
   switch (err.code) {
+    case 'BAD_REQUEST':
+      return { httpStatusCode: 400, returnError };
     case 'NOT_FOUND':
       return { httpStatusCode: 404, returnError };
     default:
@@ -13,9 +15,9 @@ function getError(err: any) {
   }
 }
 
-export function errorHandler(err: Error, _req: Request, res: Response, next: NextFunction) {
+export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
   if (err) {
-    logger.error(err);
+    logger.error(`${req.originalUrl}: ${err}`);
     const { httpStatusCode, returnError } = getError(err);
     return res.status(httpStatusCode).send(returnError);
   }

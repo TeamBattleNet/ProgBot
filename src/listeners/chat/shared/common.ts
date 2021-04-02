@@ -1,5 +1,5 @@
 import { DiscordClient, MsgHandler as DiscordMessageHandler } from '../discord/discordBot';
-import { TwitchClient, MsgHandler as TwitchMessageHandler } from '../twitch/twitchBot';
+import { TwitchIRCClient, MsgHandler as TwitchMessageHandler } from '../twitch/twitchIRC';
 import { User } from '../../../models/user';
 import type { CommandCategory } from '../../../types';
 import type { PrivateMessage as TwitchMessage } from 'twitch-chat-client';
@@ -51,7 +51,7 @@ export function registerCommonAnonymousCommand(command: CommonAnonymousCommand) 
     usageInfo: command.usageInfo,
     handler: async (msg, param) => command.handler({ chatType: 'discord', discordMsg: msg }, param),
   });
-  TwitchClient.registerCommand({
+  TwitchIRCClient.registerCommand({
     cmd: command.cmd,
     category: command.category,
     shortDescription: command.shortDescription,
@@ -68,7 +68,7 @@ export function registerCommonRegisteredCommand(command: CommonRegisteredCommand
     usageInfo: command.usageInfo,
     handler: discordMessageWrapper(command.handler, false),
   });
-  TwitchClient.registerCommand({
+  TwitchIRCClient.registerCommand({
     cmd: command.cmd,
     category: command.category,
     shortDescription: command.shortDescription,
@@ -85,7 +85,7 @@ export function registerCommonAdminCommand(command: CommonAdminCommand) {
     usageInfo: command.usageInfo,
     handler: discordMessageWrapper(command.handler, true),
   });
-  TwitchClient.registerCommand({
+  TwitchIRCClient.registerCommand({
     cmd: command.cmd,
     category: 'Admin',
     shortDescription: command.shortDescription,
@@ -108,7 +108,7 @@ function twitchMessageWrapper(handler: commonRegisteredMessageHandler, adminRequ
     const userId = msg.userInfo.userId;
     if (!userId) throw new Error(`Couldn't find twitch user id for message by ${msg.userInfo.userName}`);
     const user = await User.findByTwitchUserId(userId);
-    if (!user) return `You must be registered to use this function. Try ${TwitchClient.cmdPrefix}register first`;
+    if (!user) return `You must be registered to use this function. Try ${TwitchIRCClient.cmdPrefix}register first`;
     if (adminRequired && !user.isAdmin()) return 'Permission denied';
     return handler({ chatType: 'twitch', twitchMsg: msg }, user, param);
   };

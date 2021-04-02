@@ -1,8 +1,16 @@
+import got from 'got';
 import { Config } from './configuration';
+import { getLogger } from '../logger';
 import { ApiClient, HelixStream } from 'twitch';
 import { RefreshableAuthProvider, StaticAuthProvider } from 'twitch-auth';
 
+const logger = getLogger('twitchAPI');
+
 export class TwitchApi {
+  public static got = got.extend({
+    throwHttpErrors: false,
+    timeout: 30000,
+  });
   public static AuthProvider = new RefreshableAuthProvider(new StaticAuthProvider(Config.getConfig().twitch_app_client_id, Config.getConfig().twitch_bot_access_token), {
     clientSecret: Config.getConfig().twitch_app_client_secret,
     refreshToken: Config.getConfig().twitch_bot_refresh_token,
@@ -30,6 +38,29 @@ export class TwitchApi {
   public static async getTwitchUserNames(twitchIDs: string[]) {
     const users = await TwitchApi.client.helix.users.getUsersByIds(twitchIDs);
     return users.map((user) => user.displayName);
+  }
+
+  public static async getOauthToken(code: string, redirectURI: string) {
+    const response = await TwitchApi.got('https://id.twitch.tv/oauth2/token', {
+      method: 'POST',
+      responseType: 'text',
+      searchParams: {
+        client_id: Config.getConfig().twitch_app_client_id,
+        client_secret: Config.getConfig().twitch_app_client_secret,
+        grant_type: 'authorization_code',
+        redirect_uri: redirectURI,
+        code,
+      },
+    });
+    if (response.statusCode !== 200) {
+      logger.error(`Bad response from twitch getting oauth token. Status: ${response.statusCode}\n${response.body}`);
+      throw new Error(`Bad response getting oauth token from twitch`);
+    }
+    const tokenData = JSON.parse(response.body);
+    return {
+      accessToken: tokenData.access_token as string,
+      refreshToken: tokenData.refresh_token as string,
+    };
   }
 }
 

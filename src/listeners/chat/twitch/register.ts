@@ -1,4 +1,4 @@
-import type { TwitchCommand } from './twitchBot';
+import type { TwitchCommand } from './twitchIRC';
 import { User } from '../../../models/user';
 
 export const registerTwitch: TwitchCommand = {
