@@ -16,6 +16,7 @@ export const streams: CommonAnonymousCommand = {
         stream.user = stream.user.replace('_', '\\_');
         stream.url = `<${stream.url}>`;
       });
-    return streams.map((stream) => `${stream.user} is streaming ${stream.game}: ${stream.url}`).join(isDiscord ? '\n' : ' | ');
+    const separator = isDiscord ? '!\n' : ': ';
+    return streams.map((stream) => `${stream.user} is streaming ${stream.game}${separator}${stream.url}`).join(isDiscord ? '\n' : ' | ');
   },
 };
