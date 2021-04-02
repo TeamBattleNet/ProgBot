@@ -11,6 +11,7 @@ import {
   listAllowedTwitchChannels,
   reloadAllowedTwitchChannels,
   removeAllowedTwitchChannel,
+  authTwitchChannel,
   addChannelPointsIntegration,
   removeChannelPointsIntegration,
   listChannelPointsIntegrations,
@@ -73,6 +74,7 @@ export async function initializeChatBotHandlers() {
   registerCommonAdminCommand(removeAllowedTwitchChannel);
   registerCommonAdminCommand(listAllowedTwitchChannels);
   registerCommonAdminCommand(reloadAllowedTwitchChannels);
+  registerCommonAdminCommand(authTwitchChannel);
   registerCommonAdminCommand(addChannelPointsIntegration);
   registerCommonAdminCommand(removeChannelPointsIntegration);
   registerCommonAdminCommand(listChannelPointsIntegrations);

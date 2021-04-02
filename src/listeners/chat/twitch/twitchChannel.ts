@@ -154,6 +154,18 @@ export const reloadAllowedTwitchChannels: CommonAdminCommand = {
   },
 };
 
+export const authTwitchChannel: CommonAdminCommand = {
+  cmd: 'authtwitchchannel',
+  shortDescription: 'Get/refresh an oauth token for an allowed twitch channel',
+  usageInfo: 'usage: authtwitchchannel <channel>',
+  handler: async (ctx, user, param) => {
+    if (!param) return 'Invalid syntax, must provide a channel name to auth';
+    const channel = await TwitchChannel.getChannel(param);
+    if (!channel) return `${param} is not an allowed twitch channel. Please use addtwitchchannel first`;
+    return `Use this URL to authorize while logged into ${param}: ${await channel.getOauthURL()}`;
+  },
+};
+
 export const addChannelPointsIntegration: CommonAdminCommand = {
   cmd: 'addchannelpointsintegration',
   shortDescription: 'Enable channel points integration for an allowed twitch channel',
@@ -163,10 +175,20 @@ export const addChannelPointsIntegration: CommonAdminCommand = {
     const channel = await TwitchChannel.getChannel(param);
     if (!channel) return `${param} is not an allowed twitch channel. Please use addtwitchchannel first`;
     if (channel.channelPointsIntegration) return `Channel ${param} already has channel point integration enabled. Nothing to do`;
-    if (!channel.accessToken || !channel.refreshToken)
-      return `Channel needs authorization before this can be enabled. Use this URL to authorize while logged into ${param}: ${await channel.getOauthURL()}`;
+    const needAuthMsg = 'Channel needs authorization before this can be enabled. Please use authtwitchchannel first';
+    if (!channel.accessToken || !channel.refreshToken) return needAuthMsg;
+    try {
+      await TwitchEventClient.addNewChannelPointsListener(channel);
+    } catch (e) {
+      if (e?.name === 'InvalidTokenError') {
+        return needAuthMsg;
+      } else if (`${e}`.includes('ERR_BADAUTH')) {
+        await TwitchEventClient.removeChannelPointsListener(await TwitchApi.getTwitchUserID(channel.channel));
+        return needAuthMsg;
+      }
+      throw e;
+    }
     await channel.setChannelPointIntegration();
-    await TwitchEventClient.addNewChannelPointsListener(channel);
     return `Channel point integrations have been successfully enabled for ${param}`;
   },
 };
