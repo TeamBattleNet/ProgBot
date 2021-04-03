@@ -7,6 +7,7 @@ import { DiscordClient } from './listeners/chat/discord/discordBot';
 import { TwitchIRCClient } from './listeners/chat/twitch/twitchIRC';
 import { TwitchEventClient } from './listeners/pubsub/twitchEvents';
 import { initializeChatBotHandlers } from './listeners/chat';
+import { initializeChannelPointHandlers } from './listeners/pubsub';
 import { scheduleStreamAnnouncer, unscheduleStreamAnnouncer } from './listeners/streamwatcher/streamAnnouncer';
 import { getLogger } from './logger';
 const logger = getLogger('main');
@@ -21,6 +22,7 @@ async function main() {
   await initializeChatBotHandlers();
   logger.info('Connecting to twitch');
   await TwitchIRCClient.connect();
+  initializeChannelPointHandlers();
   await TwitchEventClient.connect();
   logger.info('Connecting to discord');
   await DiscordClient.connect();

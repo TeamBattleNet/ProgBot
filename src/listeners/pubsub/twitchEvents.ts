@@ -7,8 +7,16 @@ const logger = getLogger('twitchPubSub');
 
 const singletonClient = new PubSubClient();
 
+export type ChannelPointHandler = (msg: PubSubRedemptionMessage) => any;
+
+export interface TwitchReward {
+  rewardName: string;
+  handler: ChannelPointHandler;
+}
+
 export class TwitchEventClient {
   public static client = singletonClient;
+  private static channelPointHandlers: { [rewardName: string]: ChannelPointHandler | undefined } = {};
   private static listeners: { [userId: string]: PubSubListener } = {};
 
   public static async connect() {
@@ -39,11 +47,16 @@ export class TwitchEventClient {
 
   public static async redemptionHandler(msg: PubSubRedemptionMessage) {
     try {
-      // placeholder for now
-      logger.info(msg);
+      logger.trace(`${msg.userDisplayName} redeemed ${msg.rewardName} in ${msg.channelId}: ${msg.message}`);
+      await TwitchEventClient.channelPointHandlers[msg.rewardName]?.(msg);
     } catch (e) {
       logger.error(e);
     }
+  }
+
+  public static registerChannelPointHandler(reward: TwitchReward) {
+    if (TwitchEventClient.channelPointHandlers[reward.rewardName]) throw new Error(`Handler for reward ${reward.rewardName} already registered!`);
+    TwitchEventClient.channelPointHandlers[reward.rewardName] = reward.handler;
   }
 
   public static async shutdown() {

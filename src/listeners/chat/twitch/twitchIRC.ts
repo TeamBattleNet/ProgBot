@@ -85,6 +85,11 @@ export class TwitchIRCClient {
     return chan;
   }
 
+  public static async sendMessage(channel: string, msg: string) {
+    const chan = TwitchIRCClient.getTwitchChannelFromCache(channel);
+    await TwitchIRCClient.client.say(`#${chan.channel}`, msg);
+  }
+
   public static async handleMessage(_chan: string, _usr: string, _msg: string, msg: PrivateMessage) {
     if (msg.message.value.startsWith(TwitchIRCClient.cmdPrefix)) {
       const channel = msg.target.value.substring(1).toLowerCase();

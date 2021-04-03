@@ -28,6 +28,7 @@ import { getAllSimpleCommands, addSimpleCommand, removeSimpleCommand, listSimple
 import { quote, addQuote } from './shared/quote';
 import { literally, addLiterally } from './shared/literally';
 import { blame } from './shared/blame';
+import { styleIn } from './shared/style';
 
 export async function initializeChatBotHandlers() {
   // Help
@@ -39,6 +40,7 @@ export async function initializeChatBotHandlers() {
   registerCommonAnonymousCommand(literally);
   registerCommonAdminCommand(addLiterally);
   registerCommonAnonymousCommand(blame);
+  registerCommonRegisteredCommand(styleIn);
 
   // Livestream Announcements
   DiscordClient.registerCommand(makeAnnounceChannel);
