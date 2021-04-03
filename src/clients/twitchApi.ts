@@ -35,6 +35,12 @@ export class TwitchApi {
     return user.id;
   }
 
+  // returns an empty string if not found
+  public static async getTwitchLoginName(twitchId: string) {
+    const user = await TwitchApi.client.helix.users.getUserById(twitchId);
+    return user?.name || '';
+  }
+
   public static async getTwitchUserNames(twitchIDs: string[]) {
     const users = await TwitchApi.client.helix.users.getUsersByIds(twitchIDs);
     return users.map((user) => user.displayName);

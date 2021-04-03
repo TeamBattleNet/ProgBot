@@ -69,8 +69,8 @@ export class User extends BaseEntity {
   })
   battlechips: BattleChips;
 
-  @Column({ nullable: true })
-  style?: StyleType;
+  @Column({ default: 'Normal Style' })
+  style: StyleType;
 
   @Column()
   lastBrowseTime: Date;
