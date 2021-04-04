@@ -95,9 +95,10 @@ export class TwitchIRCClient {
       const channel = msg.target.value.substring(1).toLowerCase();
       const { word: cmd, remain: param } = parseNextWord(msg.message.value, TwitchIRCClient.cmdPrefix.length);
       logger.trace(`cmd: '${cmd}' params: '${param}' channel: '${channel}' user: ${msg.userInfo.userName}`);
-      if (TwitchIRCClient.commands[cmd] && !TwitchIRCClient.channelsCache[channel]?.isDisabledCommand(cmd)) {
+      const lowerCmd = cmd.toLowerCase();
+      if (TwitchIRCClient.commands[lowerCmd] && !TwitchIRCClient.channelsCache[channel]?.isDisabledCommand(lowerCmd)) {
         try {
-          const reply = await TwitchIRCClient.commands[cmd].handler(msg, param);
+          const reply = await TwitchIRCClient.commands[lowerCmd].handler(msg, param);
           if (reply) TwitchIRCClient.client.say(msg.target.value, reply);
         } catch (e) {
           logger.error(e);
@@ -108,8 +109,9 @@ export class TwitchIRCClient {
   }
 
   public static registerCommand(command: TwitchCommand) {
-    if (TwitchIRCClient.commands[command.cmd]) throw new Error(`Command handler for cmd ${command.cmd} already registered!`);
-    TwitchIRCClient.commands[command.cmd] = {
+    const lowerCmd = command.cmd.toLowerCase();
+    if (TwitchIRCClient.commands[lowerCmd]) throw new Error(`Command handler for cmd ${command.cmd} already registered!`);
+    TwitchIRCClient.commands[lowerCmd] = {
       category: command.category,
       desc: command.shortDescription,
       usage: command.usageInfo,
