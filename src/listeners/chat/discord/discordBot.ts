@@ -52,7 +52,8 @@ export class DiscordClient {
     if (message.content.startsWith(DiscordClient.cmdPrefix)) {
       const { word: cmd, remain: param } = parseNextWord(message.content, DiscordClient.cmdPrefix.length);
       logger.trace(`cmd: '${cmd}' params: '${param}' user: ${message.member?.user.username}#${message.member?.user.discriminator}`);
-      if (DiscordClient.commands[cmd]) {
+      const lowerCmd = cmd.toLowerCase();
+      if (DiscordClient.commands[lowerCmd]) {
         // Start typing if reply takes time to generate (over 100ms)
         let typing = false;
         const timeout = setTimeout(() => {
@@ -60,7 +61,7 @@ export class DiscordClient {
           typing = true;
         }, 100);
         try {
-          const reply = await DiscordClient.commands[cmd].handler(message, param);
+          const reply = await DiscordClient.commands[lowerCmd].handler(message, param);
           clearTimeout(timeout);
           if (reply) await message.channel.send(reply);
           if (typing) message.channel.stopTyping(true);
@@ -73,8 +74,9 @@ export class DiscordClient {
   }
 
   public static registerCommand(command: DiscordCommand) {
-    if (DiscordClient.commands[command.cmd]) throw new Error(`Command handler for cmd ${command.cmd} already registered!`);
-    DiscordClient.commands[command.cmd] = {
+    const lowerCmd = command.cmd.toLowerCase();
+    if (DiscordClient.commands[lowerCmd]) throw new Error(`Command handler for cmd ${command.cmd} already registered!`);
+    DiscordClient.commands[lowerCmd] = {
       category: command.category,
       desc: command.shortDescription,
       usage: command.usageInfo,

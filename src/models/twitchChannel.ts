@@ -36,7 +36,7 @@ export class TwitchChannel extends BaseEntity {
   refreshToken: string | null;
 
   public isDisabledCommand(cmd: string) {
-    return this.disabledCommands.has(cmd);
+    return this.disabledCommands.has(cmd.toLowerCase());
   }
 
   public canBrowse(lastBrowseTime: Date) {
@@ -46,8 +46,8 @@ export class TwitchChannel extends BaseEntity {
   public async addDisabledCommands(cmds: string[]) {
     const beforeSize = this.disabledCommands.size;
     cmds.forEach((cmd) => {
-      if (cmd.indexOf(',') !== -1) throw Error('Cannot disable command with comma');
-      this.disabledCommands.add(cmd);
+      if (cmd.includes(',')) throw Error('Cannot disable command with comma');
+      this.disabledCommands.add(cmd.toLowerCase());
     });
     // Only save if something has changed
     if (this.disabledCommands.size !== beforeSize) await this.save();
