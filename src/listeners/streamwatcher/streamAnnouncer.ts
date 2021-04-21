@@ -5,6 +5,7 @@ import { getLogger } from '../../logger';
 const logger = getLogger('StreamAnnouncer');
 
 const ANNOUNCE_CHECK_PERIOD_MS = 15000;
+let mutex = false;
 let interval: any = undefined;
 const startTime = new Date();
 const activeStreams: { [streamId: string]: any } = {};
@@ -64,6 +65,11 @@ export async function getActiveStreams() {
 
 // Not intended to be called directly outside of this module, only exported for testing
 export async function checkAndAnnounceStreams() {
+  if (mutex) {
+    logger.info('Skipping stream announce check because another is still running');
+    return;
+  }
+  mutex = true;
   try {
     logger.debug('Starting check for streams');
     const streams = await getActiveStreams();
@@ -99,6 +105,7 @@ export async function checkAndAnnounceStreams() {
   } catch (e) {
     logger.error('Unexpected error fetching/announcing streams:', e);
   }
+  mutex = false;
 }
 
 export function scheduleStreamAnnouncer() {
