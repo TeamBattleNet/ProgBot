@@ -1,10 +1,12 @@
 import { DiscordClient } from '../chat/discord/discordBot';
 import { AnnounceChannel } from '../../models/announceChannel';
 import { TwitchApi } from '../../clients/twitchApi';
+import { timeoutPromise } from '../../utils';
 import { getLogger } from '../../logger';
 const logger = getLogger('StreamAnnouncer');
 
 const ANNOUNCE_CHECK_PERIOD_MS = 15000;
+const CHECK_TIMEOUT_MS = 60000;
 let mutex = false;
 let interval: any = undefined;
 const startTime = new Date();
@@ -71,37 +73,43 @@ export async function checkAndAnnounceStreams() {
   }
   mutex = true;
   try {
-    logger.debug('Starting check for streams');
-    const streams = await getActiveStreams();
-    if (streams.length > 0) {
-      // Clean the active stream cache by counting misses and removing streams that have been offline for some time
-      Object.keys(activeStreams).forEach((streamId) => {
-        // Add miss-count to already announced stream if it didn't appear in the twitch api requests
-        if (!streams.some((stream) => stream.id === streamId)) activeStreams[streamId].misses += 1;
-        // Clear out streams from cache that have been excluded from the API for the last few calls (are offline/completed)
-        // Only clear after so many misses so we can keep track of previously announced streams for some time to de-dupe restarted streams from announcements
-        if (activeStreams[streamId].misses > 120) delete activeStreams[streamId];
-      });
-      const announceChannels = await AnnounceChannel.getLiveAnnounceChannels();
-      for (const stream of streams) {
-        if (
-          activeStreams[stream.id] === undefined &&
-          startTime < stream.start &&
-          !Object.values(activeStreams).some((activeStream) => stream.user === activeStream.user && stream.title === activeStream.title && stream.game === activeStream.game)
-        ) {
-          /*
-          Only announce if:
-          Stream was not previously active (has not been announced already)
-          Bot start time is before stream start time (so we don't announce duplicates if the bot restarts)
-          Another announced (active) stream does not exist which has identical user/title/game (same stream restarted with new id)
-          */
-          const announceMessage = `${stream.user.replace('_', '\\_')} is live playing: ${stream.game}\n<${stream.url}>\n\`\`\`${stream.title}\`\`\``;
-          await Promise.all(announceChannels.map((chan) => DiscordClient.sendMessage(chan.channel, announceMessage)));
+    await timeoutPromise(
+      (async () => {
+        logger.debug('Starting check for streams');
+        const streams = await getActiveStreams();
+        if (streams.length > 0) {
+          // Clean the active stream cache by counting misses and removing streams that have been offline for some time
+          Object.keys(activeStreams).forEach((streamId) => {
+            // Add miss-count to already announced stream if it didn't appear in the twitch api requests
+            if (!streams.some((stream) => stream.id === streamId)) activeStreams[streamId].misses += 1;
+            // Clear out streams from cache that have been excluded from the API for the last few calls (are offline/completed)
+            // Only clear after so many misses so we can keep track of previously announced streams for some time to de-dupe restarted streams from announcements
+            if (activeStreams[streamId].misses > 120) delete activeStreams[streamId];
+          });
+          const announceChannels = await AnnounceChannel.getLiveAnnounceChannels();
+          for (const stream of streams) {
+            if (
+              activeStreams[stream.id] === undefined &&
+              startTime < stream.start &&
+              !Object.values(activeStreams).some((activeStream) => stream.user === activeStream.user && stream.title === activeStream.title && stream.game === activeStream.game)
+            ) {
+              /*
+              Only announce if:
+              Stream was not previously active (has not been announced already)
+              Bot start time is before stream start time (so we don't announce duplicates if the bot restarts)
+              Another announced (active) stream does not exist which has identical user/title/game (same stream restarted with new id)
+              */
+              const announceMessage = `${stream.user.replace('_', '\\_')} is live playing: ${stream.game}\n<${stream.url}>\n\`\`\`${stream.title}\`\`\``;
+              await Promise.all(announceChannels.map((chan) => DiscordClient.sendMessage(chan.channel, announceMessage)));
+            }
+            activeStreams[stream.id] = { ...stream, misses: 0 };
+          }
         }
-        activeStreams[stream.id] = { ...stream, misses: 0 };
-      }
-    }
-    logger.debug('Stream discovery/announce complete');
+        logger.debug('Stream discovery/announce complete');
+      })(),
+      CHECK_TIMEOUT_MS,
+      new Error('Check timed out')
+    );
   } catch (e) {
     logger.error('Unexpected error fetching/announcing streams:', e);
   }
