@@ -1,10 +1,10 @@
 import { CommonRegisteredCommand } from './common';
 
-export const styleIn: CommonRegisteredCommand = {
+export const stylin: CommonRegisteredCommand = {
   cmd: 'stylin',
   category: 'General',
   shortDescription: 'Show off your style!',
-  usageInfo: 'usage: stylein',
+  usageInfo: 'usage: stylin',
   handler: async (ctx, user) => {
     let userRef = `<@${user.discordUserId}>`;
     if (ctx.chatType === 'twitch') {
