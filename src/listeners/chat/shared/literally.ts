@@ -11,7 +11,7 @@ export const literally: CommonAnonymousCommand = {
   literally [filter] - get a random 'literally' clip with [filter]`,
   handler: async (_, param) => {
     const litObj = await Literally.getRandomLiterally(param);
-    if (!litObj) return `Nothing found for ${param}!`;
+    if (!litObj) return `I literally can not find a clip of that!`;
     return `You LITERALLY can not ${litObj.what}: ${litObj.clip}`;
   },
 };
