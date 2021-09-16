@@ -1,4 +1,5 @@
 import { readFileSync, promises as fspromise } from 'fs';
+import type { AccessToken } from '@twurple/auth';
 import { ConfigFile } from '../types';
 
 const CONFIG_FILE_PATH = 'runtime/config.json';
@@ -15,10 +16,10 @@ export class Config {
     Config.configCache = JSON.parse(readFileSync(CONFIG_FILE_PATH, 'utf8'));
   }
 
-  public static async updateTwitchAuthTokens(botAccessToken: string, botRefreshToken: string) {
+  public static async updateTwitchAuthToken(newToken: AccessToken) {
     const currentConf = Config.getConfig();
-    currentConf.twitch_bot_access_token = botAccessToken;
-    currentConf.twitch_bot_refresh_token = botRefreshToken;
+    currentConf.twitch_bot_access_token = newToken.accessToken;
+    currentConf.twitch_bot_refresh_token = newToken.refreshToken || '';
     Config.configCache = currentConf;
     await fspromise.writeFile(CONFIG_FILE_PATH, JSON.stringify(currentConf, null, 2), 'utf8');
   }

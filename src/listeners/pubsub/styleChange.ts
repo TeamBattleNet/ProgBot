@@ -4,7 +4,7 @@ import { TwitchIRCClient } from '../../listeners/chat/twitch/twitchIRC';
 import { TwitchReward } from './twitchEvents';
 
 export const styleChange: TwitchReward = {
-  rewardName: '!StyleChange',
+  rewardTitle: '!StyleChange',
   handler: async (reward) => {
     let user = await User.findByTwitchUserId(reward.userId);
     // Register twitch user as a new user if they aren't already registered

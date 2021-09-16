@@ -1,22 +1,21 @@
 import { SinonSandbox, createSandbox, SinonStub, assert } from 'sinon';
 import { expect } from 'chai';
-import { Database } from './database';
-import * as typeorm from 'typeorm';
+import proxyquire from 'proxyquire';
 
 describe('database', () => {
   let sandbox: SinonSandbox;
   let getConnectionOptionsStub: SinonStub;
   let createConnectionStub: SinonStub;
+  let Database: any;
 
   beforeEach(() => {
-    Database.connection = undefined as any;
     sandbox = createSandbox();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    createConnectionStub = typeorm.createConnection = sandbox.stub().resolves({}) as any;
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    getConnectionOptionsStub = typeorm.getConnectionOptions = sandbox.stub() as any;
+    createConnectionStub = sandbox.stub().resolves({});
+    getConnectionOptionsStub = sandbox.stub();
+    Database = proxyquire('./database', {
+      typeorm: { createConnection: createConnectionStub, getConnectionOptions: getConnectionOptionsStub },
+    }).Database;
+    Database.connection = undefined;
   });
 
   afterEach(() => {

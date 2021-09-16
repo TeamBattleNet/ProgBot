@@ -3,12 +3,16 @@ import { Config } from '../../../clients/configuration';
 import { TwitchApi } from '../../../clients/twitchApi';
 import { TwitchChannel } from '../../../models/twitchChannel';
 import { getLogger } from '../../../logger';
-import { ChatClient, PrivateMessage } from 'twitch-chat-client';
+import { ChatClient, PrivateMessage } from '@twurple/chat';
 import type { CommandCategory } from '../../../types';
 
 const logger = getLogger('twitchIRC');
 
-const singletonClient = new ChatClient(TwitchApi.AuthProvider, { logger: { emoji: false } });
+const singletonClient = new ChatClient({
+  authProvider: TwitchApi.AuthProvider,
+  isAlwaysMod: true,
+  logger: { emoji: false, minLevel: 'debug' },
+});
 
 export type MsgHandler = (msg: PrivateMessage, param?: string) => Promise<string>;
 // param input in the handler is the parsed message content after trimming the prepended command.
@@ -37,6 +41,7 @@ export class TwitchIRCClient {
 
   public static async connect() {
     await TwitchIRCClient.client.connect();
+    logger.info(TwitchIRCClient.client._authProvider?.currentScopes);
   }
 
   public static async postRegistration() {
@@ -91,9 +96,9 @@ export class TwitchIRCClient {
   }
 
   public static async handleMessage(_chan: string, _usr: string, _msg: string, msg: PrivateMessage) {
-    if (msg.message.value.startsWith(TwitchIRCClient.cmdPrefix)) {
+    if (msg.content.value.startsWith(TwitchIRCClient.cmdPrefix)) {
       const channel = msg.target.value.substring(1).toLowerCase();
-      const { word: cmd, remain: param } = parseNextWord(msg.message.value, TwitchIRCClient.cmdPrefix.length);
+      const { word: cmd, remain: param } = parseNextWord(msg.content.value, TwitchIRCClient.cmdPrefix.length);
       logger.trace(`cmd: '${cmd}' params: '${param}' channel: '${channel}' user: ${msg.userInfo.userName}`);
       const lowerCmd = cmd.toLowerCase();
       if (TwitchIRCClient.commands[lowerCmd] && !TwitchIRCClient.channelsCache[channel]?.isDisabledCommand(lowerCmd)) {
