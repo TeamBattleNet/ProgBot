@@ -11,7 +11,7 @@ const logger = getLogger('twitchIRC');
 const singletonClient = new ChatClient({
   authProvider: TwitchApi.AuthProvider,
   isAlwaysMod: true,
-  logger: { emoji: false, minLevel: 'debug' },
+  logger: { emoji: false },
 });
 
 export type MsgHandler = (msg: PrivateMessage, param?: string) => Promise<string>;
