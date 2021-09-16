@@ -41,7 +41,6 @@ export class TwitchIRCClient {
 
   public static async connect() {
     await TwitchIRCClient.client.connect();
-    logger.info(TwitchIRCClient.client._authProvider?.currentScopes);
   }
 
   public static async postRegistration() {
