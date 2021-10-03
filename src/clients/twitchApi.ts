@@ -6,6 +6,15 @@ import { RefreshingAuthProvider } from '@twurple/auth';
 
 const logger = getLogger('twitchAPI');
 
+export interface TwitchStream {
+  id: string;
+  title: string;
+  game: string;
+  user: string;
+  start: Date;
+  url: string;
+}
+
 export class TwitchApi {
   public static got = got.extend({
     throwHttpErrors: false,
@@ -86,7 +95,7 @@ export class TwitchApi {
   }
 }
 
-function apiStreamToStreamObj(stream: HelixStream) {
+function apiStreamToStreamObj(stream: HelixStream): TwitchStream {
   return {
     id: stream.id,
     title: stream.title,
