@@ -18,7 +18,7 @@ import {
 } from './twitch/twitchChannel';
 import { registerDiscord } from './discord/register';
 import { generateApiKey } from './discord/apiKey';
-import { makeAnnounceChannel, removeAnnounceChannel } from './discord/liveAnnounce';
+import { makeAnnounceChannel, makeSpeedrunAnnounceChannel, removeAnnounceChannel } from './discord/liveAnnounce';
 import { addTwitchStreamLiveChannel, removeTwitchStreamLiveChannel, listTwitchStreamLiveChannel } from './shared/liveChannel';
 import { streams } from './shared/streams';
 import { registerTwitch } from './twitch/register';
@@ -44,6 +44,7 @@ export async function initializeChatBotHandlers() {
 
   // Livestream Announcements
   DiscordClient.registerCommand(makeAnnounceChannel);
+  DiscordClient.registerCommand(makeSpeedrunAnnounceChannel);
   DiscordClient.registerCommand(removeAnnounceChannel);
   registerCommonAdminCommand(addTwitchStreamLiveChannel);
   registerCommonAdminCommand(removeTwitchStreamLiveChannel);

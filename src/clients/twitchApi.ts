@@ -36,6 +36,14 @@ export class TwitchApi {
     return (await TwitchApi.client.streams.getStreamsPaginated({ userId: twitchUserIds }).getAll()).map(apiStreamToStreamObj);
   }
 
+  // returns an empty array if channel could not be found
+  public static async getStreamTagsOfChannelName(twitchChannelName: string) {
+    const userId = await TwitchApi.getTwitchUserID(twitchChannelName);
+    if (userId) return (await TwitchApi.client.streams.getStreamTags(userId)).map((tag) => tag.id);
+    logger.warn(`Could not find twitch user by name ${twitchChannelName}`);
+    return [];
+  }
+
   // returns an empty string if not found
   public static async getTwitchUserID(twitchChannelName: string) {
     const user = await TwitchApi.client.users.getUserByName(twitchChannelName.toLowerCase());

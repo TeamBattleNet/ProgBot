@@ -21,6 +21,11 @@ export class AnnounceChannel extends BaseEntity {
     return allChannels.filter((chan) => chan.announceTypes.has('live'));
   }
 
+  public static async getSpeedrunLiveAnnounceChannels() {
+    const allChannels = await AnnounceChannel.find();
+    return allChannels.filter((chan) => chan.announceTypes.has('speedrunlive'));
+  }
+
   public static async getStreamDetectionChannels() {
     const allChannels = await AnnounceChannel.find();
     return allChannels.filter((chan) => chan.announceTypes.has('stream'));
@@ -30,17 +35,18 @@ export class AnnounceChannel extends BaseEntity {
     return AnnounceChannel.findOne({ where: { channel: channel.toLowerCase() } });
   }
 
-  public static async addNewLiveChannel(discordChannel: string) {
+  public static async addNewLiveChannel(discordChannel: string, speedrunOnly: boolean) {
+    const announceType = speedrunOnly ? 'speedrunlive' : 'live';
     const lowerChannel = discordChannel.toLowerCase();
     let announceChannel = new AnnounceChannel();
     announceChannel.channel = lowerChannel;
     announceChannel.announceTypes = new Set();
     const existingChannel = await AnnounceChannel.getChannel(discordChannel);
     if (existingChannel) {
-      if (existingChannel.announceTypes.has('live')) throw new Error(`Channel ${discordChannel} already marked for livestream announcement`);
+      if (existingChannel.announceTypes.has(announceType)) throw new Error(`Channel ${discordChannel} already marked for ${announceType} announcement`);
       announceChannel = existingChannel;
     }
-    announceChannel.announceTypes.add('live');
+    announceChannel.announceTypes.add(announceType);
     await announceChannel.save();
   }
 

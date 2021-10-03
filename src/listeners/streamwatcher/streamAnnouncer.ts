@@ -51,6 +51,10 @@ const mmbnGameTwitchIds = [
   '172137957', // Ryūsei no Rockman: Denpa Henkan! On Air!
 ];
 
+const speedrunTwitchTagIds = new Set([
+  '7cefbf30-4c3e-4aa7-99cd-70aabb662f27', // Speedrun
+]);
+
 export async function getActiveStreams() {
   const gameStreams = TwitchApi.getStreamsOfGames(mmbnGameTwitchIds);
   const twitchChannelIds = (await AnnounceChannel.getStreamDetectionChannels()).map((chan) => chan.channel);
@@ -87,6 +91,19 @@ export async function checkAndAnnounceStreams() {
             if (activeStreams[streamId].misses > 120) delete activeStreams[streamId];
           });
           const announceChannels = await AnnounceChannel.getLiveAnnounceChannels();
+          const speedrunAnnounceChannels = await AnnounceChannel.getSpeedrunLiveAnnounceChannels();
+          const speedrunStreams = new Set<string>();
+          // If we need to announce speedruns, find stream tags and filter out broadcasts with speedrun tag(s)
+          if (speedrunAnnounceChannels.length > 0) {
+            await Promise.all(
+              streams.map(async (stream) => {
+                const tags = await TwitchApi.getStreamTagsOfChannelName(stream.user);
+                if (tags.some((tag) => speedrunTwitchTagIds.has(tag))) {
+                  speedrunStreams.add(stream.id);
+                }
+              })
+            );
+          }
           for (const stream of streams) {
             if (
               activeStreams[stream.id] === undefined &&
@@ -101,6 +118,8 @@ export async function checkAndAnnounceStreams() {
               */
               const announceMessage = `${stream.user.replace('_', '\\_')} is live playing: ${stream.game}\n<${stream.url}>\n\`\`\`${stream.title}\`\`\``;
               await Promise.all(announceChannels.map((chan) => DiscordClient.sendMessage(chan.channel, announceMessage)));
+              // If it's a speedrun tagged stream, announce it in the speedrun stream announce channels as well
+              if (speedrunStreams.has(stream.id)) await Promise.all(speedrunAnnounceChannels.map((chan) => DiscordClient.sendMessage(chan.channel, announceMessage)));
             }
             activeStreams[stream.id] = { ...stream, misses: 0 };
           }
