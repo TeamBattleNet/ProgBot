@@ -12,7 +12,15 @@ const singletonClient = new discord.Client({
   intents: [discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MESSAGES, discord.Intents.FLAGS.DIRECT_MESSAGES],
 });
 
-export type MsgHandler = (msg: discord.Message, param?: string) => Promise<string>;
+export class DiscordMsgOrCmd {
+  public msg?: discord.Message;
+  public cmd?: discord.CommandInteraction;
+  public constructor(msg?: discord.Message, cmd?: discord.CommandInteraction) {
+    if (msg) this.msg = msg;
+    if (cmd) this.cmd = cmd;
+  }
+}
+export type MsgHandler = (msg: DiscordMsgOrCmd, param?: string) => Promise<string>;
 // param input in the handler is the parsed message content after trimming the prepended command.
 // Return the string content for replying to the message, or an empty string if a general reply is not desired.
 export interface DiscordCommand {
@@ -20,6 +28,7 @@ export interface DiscordCommand {
   category: CommandCategory;
   shortDescription: string;
   usageInfo: string;
+  options: { name: string; desc: string; required: boolean }[];
   handler: MsgHandler;
 }
 
@@ -28,9 +37,11 @@ export class DiscordClient {
   public static cmdPrefix = Config.getConfig().discord_bot_cmd_prefix || '!';
   private static commands: {
     [cmd: string]: {
+      cmd: string;
       category: CommandCategory;
       desc: string;
       usage: string;
+      opts: { name: string; desc: string; required: boolean }[];
       handler: MsgHandler;
     };
   } = {};
@@ -38,11 +49,40 @@ export class DiscordClient {
   public static async connect() {
     DiscordClient.registerCommand(DiscordClient.helpCommand);
     await DiscordClient.client.login(Config.getConfig().discord_token);
-    DiscordClient.client.user?.setPresence({ activities: [{ type: 'PLAYING', name: `on the net - ${DiscordClient.cmdPrefix}help` }] });
   }
 
   public static async nowReady() {
-    logger.info(`Discord client ready. Invite: ${DiscordClient.client.generateInvite({ scopes: ['bot'], permissions: [discord.Permissions.FLAGS.ADMINISTRATOR] })}`);
+    if (!DiscordClient.client.isReady()) throw new Error('nowReady called before discord client was ready!');
+    const normalCmds = Object.values(DiscordClient.commands).filter((cmd) => cmd.category !== 'Admin' && cmd.category !== 'Simple');
+    const adminCmds = Object.values(DiscordClient.commands).filter((cmd) => cmd.category === 'Admin');
+    const allDiscordCmds: discord.ApplicationCommandData[] = normalCmds.map((data) => {
+      return {
+        name: data.cmd,
+        description: data.desc,
+        options: data.opts.map((opts) => {
+          return { type: 'STRING', name: opts.name, description: opts.desc, required: opts.required };
+        }),
+      };
+    });
+    allDiscordCmds.push({
+      name: 'admin',
+      description: 'Admin commands',
+      options: adminCmds.map((data) => {
+        return {
+          name: data.cmd,
+          description: data.desc,
+          type: 'SUB_COMMAND',
+          options: data.opts.map((opts) => {
+            return { type: 'STRING', name: opts.name, description: opts.desc, required: opts.required };
+          }),
+        };
+      }),
+    });
+    await DiscordClient.client.application.commands.set(allDiscordCmds);
+    DiscordClient.client.user?.setPresence({ activities: [{ type: 'PLAYING', name: `on the net - /help` }] });
+    logger.info(
+      `Discord client ready. Invite: ${DiscordClient.client.generateInvite({ scopes: ['bot', 'applications.commands'], permissions: [discord.Permissions.FLAGS.ADMINISTRATOR] })}`
+    );
   }
 
   public static async sendMessage(channelId: string, message: string) {
@@ -63,7 +103,7 @@ export class DiscordClient {
           message.channel.sendTyping().catch();
         }, 100);
         try {
-          const reply = await DiscordClient.commands[lowerCmd].handler(message, param);
+          const reply = await DiscordClient.commands[lowerCmd].handler(new DiscordMsgOrCmd(message, undefined), param);
           clearTimeout(timeout);
           if (reply) await message.channel.send(reply);
         } catch (e) {
@@ -74,13 +114,34 @@ export class DiscordClient {
     }
   }
 
+  public static async handleInteraction(interaction: discord.Interaction) {
+    if (DiscordClient.client.application?.id === interaction.applicationId && interaction.isCommand()) {
+      logger.trace(
+        `slash cmd: '${interaction.commandName}' params: '${interaction.options.data}' user: ${interaction.member?.user.username}#${interaction.member?.user.discriminator}`
+      );
+      let lowerCmd = interaction.commandName.toLowerCase();
+      if (lowerCmd === 'admin') lowerCmd = interaction.options.getSubcommand(true).toLowerCase();
+      if (DiscordClient.commands[lowerCmd]) {
+        try {
+          const reply = await DiscordClient.commands[lowerCmd].handler(new DiscordMsgOrCmd(undefined, interaction));
+          if (reply) await interaction.reply(reply);
+        } catch (e) {
+          logger.error(e);
+          await interaction.reply('Internal Error');
+        }
+      }
+    }
+  }
+
   public static registerCommand(command: DiscordCommand) {
     const lowerCmd = command.cmd.toLowerCase();
     if (DiscordClient.commands[lowerCmd]) throw new Error(`Command handler for cmd ${command.cmd} already registered!`);
     DiscordClient.commands[lowerCmd] = {
+      cmd: lowerCmd,
       category: command.category,
       desc: command.shortDescription,
       usage: command.usageInfo,
+      opts: command.options,
       handler: command.handler,
     };
   }
@@ -100,30 +161,33 @@ export class DiscordClient {
     usageInfo: `usage: help [cmd]
   help - list all commands with their descriptions
   help [cmd] - get the description and usage information for [cmd]`,
-    handler: async (_msg, param) => {
-      const requestAdmin = param?.toLowerCase() === 'admin'; // special case for asking command 'admin'
-      if (param && !requestAdmin) {
+    options: [{ name: 'command', desc: 'Command name to get help and usage information for', required: false }],
+    handler: async (msg, param) => {
+      let cmd = param;
+      if (msg.cmd) cmd = msg.cmd.options.getString('command', false) || undefined;
+      const requestAdmin = cmd?.toLowerCase() === 'admin'; // special case for asking command 'admin'
+      if (cmd && !requestAdmin) {
         // if help for a specific command
-        if (DiscordClient.commands[param]) {
-          return `\`\`\`${param} - ${DiscordClient.commands[param].desc}\n\n${DiscordClient.commands[param].usage}\`\`\``;
+        if (DiscordClient.commands[cmd]) {
+          return `\`\`\`${cmd} - ${DiscordClient.commands[cmd].desc}\n\n${DiscordClient.commands[cmd].usage}\`\`\``;
         } else {
-          return `Unknown command '${param}'`;
+          return `Unknown command '${cmd}'`;
         }
       } else {
         // no specific command specified, list all commands
         const cmdHelpByCategory: { [index: string]: string[] } = {};
         Object.entries(DiscordClient.commands).forEach(([cmd, data]) => {
           if (!cmdHelpByCategory[data.category]) cmdHelpByCategory[data.category] = [];
-          cmdHelpByCategory[data.category].push(`${DiscordClient.cmdPrefix}${cmd} - ${data.desc}`);
+          cmdHelpByCategory[data.category].push(`${cmd} - ${data.desc}`);
         });
         let replyText = `\`\`\`Commands:\n`;
         const separator = '\n  ';
         Object.entries(cmdHelpByCategory).forEach(([category, data]) => {
           if (!requestAdmin) {
             // Filter 'Simple' and 'Admin' commands from general help display
-            if (category !== 'Simple' && category !== 'Admin') replyText += `\n${category}:${separator}${data.join(separator)}\n`;
+            if (category !== 'Simple' && category !== 'Admin') replyText += `\n${category}:${separator}/${data.join(`${separator}/`)}\n`;
           } else {
-            if (category === 'Admin') replyText += `\n${category}:${separator}${data.join(separator)}\n`;
+            if (category === 'Admin') replyText += `\n${category}:${separator}/admin ${data.join(`${separator}/admin `)}\n`;
           }
         });
         return replyText.trimEnd() + '```';
@@ -138,5 +202,6 @@ export class DiscordClient {
 
 singletonClient.on('ready', DiscordClient.nowReady);
 singletonClient.on('messageCreate', DiscordClient.handleMessage);
+singletonClient.on('interactionCreate', DiscordClient.handleInteraction);
 singletonClient.on('rateLimit', (r) => logger.warn(`Rate limit: ${r}`));
 singletonClient.on('error', logger.error);

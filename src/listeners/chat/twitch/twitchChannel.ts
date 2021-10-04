@@ -72,26 +72,29 @@ export const addAllowedTwitchChannel: CommonAdminCommand = {
   cmd: 'addtwitchchannel',
   shortDescription: 'Add a new twitch channel that progbot should allow and join',
   usageInfo: 'usage: addtwitchchannel <channel>',
+  options: [{ name: 'channel', desc: 'Username of twitch channel to allow and join', required: true }],
   handler: async (ctx, user, param) => {
-    if (!param) return 'Invalid syntax, must provide a channel to join';
+    let chan = param;
+    if (ctx.discordMsg?.cmd) chan = ctx.discordMsg?.cmd.options.getString('channel', true);
+    if (!chan) return 'Invalid syntax, must provide a channel to join';
     let channel: TwitchChannel | undefined = undefined;
     // Check if channel is in cache or db first
     try {
-      channel = TwitchIRCClient.getTwitchChannelFromCache(param);
+      channel = TwitchIRCClient.getTwitchChannelFromCache(chan);
     } catch {
-      channel = await TwitchChannel.getChannel(param);
+      channel = await TwitchChannel.getChannel(chan);
     }
-    if (channel) return `Channel ${param} is already allowed. If progbot is not currently in this channel, try the reloadtwitchchannels command`;
+    if (channel) return `Channel ${chan} is already allowed. If progbot is not currently in this channel, try the reloadtwitchchannels command`;
     // Create the new channel now that we confirmed it isn't already allowed
-    channel = await TwitchChannel.createNewChannel(param);
+    channel = await TwitchChannel.createNewChannel(chan);
     try {
       await TwitchIRCClient.joinChannel(channel);
     } catch {
       // Failed to join the specified channel, remove it from the DB and return an error message
       await channel.remove();
-      return `Error joining channel ${param}, It will not be allowed`;
+      return `Error joining channel ${chan}, It will not be allowed`;
     }
-    return `Allowed and joined twitch channel ${param}`;
+    return `Allowed and joined twitch channel ${chan}`;
   },
 };
 
@@ -99,19 +102,22 @@ export const removeAllowedTwitchChannel: CommonAdminCommand = {
   cmd: 'removetwitchchannel',
   shortDescription: 'Remove a previously allowed twitch channel from progbot',
   usageInfo: 'usage: removetwitchchannel <channel>',
+  options: [{ name: 'channel', desc: 'Username of twitch channel to un-allow and leave', required: true }],
   handler: async (ctx, user, param) => {
-    if (!param) return 'Invalid syntax, must provide a channel to leave';
+    let chan = param;
+    if (ctx.discordMsg?.cmd) chan = ctx.discordMsg?.cmd.options.getString('channel', true);
+    if (!chan) return 'Invalid syntax, must provide a channel to leave';
     let channel: TwitchChannel | undefined = undefined;
     // Retrieve channel from cache (or db if cache misses)
     try {
-      channel = TwitchIRCClient.getTwitchChannelFromCache(param);
+      channel = TwitchIRCClient.getTwitchChannelFromCache(chan);
     } catch {
-      channel = await TwitchChannel.getChannel(param);
+      channel = await TwitchChannel.getChannel(chan);
     }
-    if (!channel) return `Channel ${param} is not a currently allowed channel. Nothing to do`;
+    if (!channel) return `Channel ${chan} is not a currently allowed channel. Nothing to do`;
     TwitchIRCClient.leaveChannel(channel.channel);
     await channel.remove();
-    return `Left twitch channel ${param} and removed it from the allowed list`;
+    return `Left twitch channel ${chan} and removed it from the allowed list`;
   },
 };
 
@@ -119,6 +125,7 @@ export const listAllowedTwitchChannels: CommonAdminCommand = {
   cmd: 'listtwitchchannels',
   shortDescription: 'List the allowed twitch channels of progbot',
   usageInfo: 'usage: listtwitchchannels',
+  options: [],
   handler: async () => {
     const channels = await TwitchChannel.getAllChannels();
     return `Channels: ${channels.map((x) => x.channel).join(', ') || 'none'}`;
@@ -129,6 +136,7 @@ export const reloadAllowedTwitchChannels: CommonAdminCommand = {
   cmd: 'reloadtwitchchannels',
   shortDescription: 'Leave all the twitch channels that progbot should be connected to, and rejoin them',
   usageInfo: 'usage: reloadtwitchchannels',
+  options: [],
   handler: async (ctx) => {
     logger.info('Reloading twitch channels due to admin request');
     const separator = ctx.chatType === 'discord' ? '\n' : ' | ';
@@ -158,11 +166,14 @@ export const authTwitchChannel: CommonAdminCommand = {
   cmd: 'authtwitchchannel',
   shortDescription: 'Get/refresh an oauth token for an allowed twitch channel',
   usageInfo: 'usage: authtwitchchannel <channel>',
+  options: [{ name: 'channel', desc: 'Username of twitch channel to un-allow and leave', required: true }],
   handler: async (ctx, user, param) => {
-    if (!param) return 'Invalid syntax, must provide a channel name to auth';
-    const channel = await TwitchChannel.getChannel(param);
-    if (!channel) return `${param} is not an allowed twitch channel. Please use addtwitchchannel first`;
-    return `Use this URL to authorize while logged into ${param}: ${await channel.getOauthURL()}`;
+    let chan = param;
+    if (ctx.discordMsg?.cmd) chan = ctx.discordMsg?.cmd.options.getString('channel', true);
+    if (!chan) return 'Invalid syntax, must provide a channel name to auth';
+    const channel = await TwitchChannel.getChannel(chan);
+    if (!channel) return `${chan} is not an allowed twitch channel. Please use addtwitchchannel first`;
+    return `Use this URL to authorize while logged into ${chan}: ${await channel.getOauthURL()}`;
   },
 };
 
@@ -170,11 +181,14 @@ export const addChannelPointsIntegration: CommonAdminCommand = {
   cmd: 'addchannelpointsintegration',
   shortDescription: 'Enable channel points integration for an allowed twitch channel',
   usageInfo: 'usage: addchannelpointsintegration <channel>',
+  options: [{ name: 'channel', desc: 'Username of twitch channel to un-allow and leave', required: true }],
   handler: async (ctx, user, param) => {
-    if (!param) return 'Invalid syntax, must provide a channel to join';
-    const channel = await TwitchChannel.getChannel(param);
-    if (!channel) return `${param} is not an allowed twitch channel. Please use addtwitchchannel first`;
-    if (channel.channelPointsIntegration) return `Channel ${param} already has channel point integration enabled. Nothing to do`;
+    let chan = param;
+    if (ctx.discordMsg?.cmd) chan = ctx.discordMsg?.cmd.options.getString('channel', true);
+    if (!chan) return 'Invalid syntax, must provide a channel to join';
+    const channel = await TwitchChannel.getChannel(chan);
+    if (!channel) return `${chan} is not an allowed twitch channel. Please use addtwitchchannel first`;
+    if (channel.channelPointsIntegration) return `Channel ${chan} already has channel point integration enabled. Nothing to do`;
     const needAuthMsg = 'Channel needs authorization before this can be enabled. Please use authtwitchchannel first';
     if (!channel.accessToken || !channel.refreshToken) return needAuthMsg;
     try {
@@ -189,7 +203,7 @@ export const addChannelPointsIntegration: CommonAdminCommand = {
       throw e;
     }
     await channel.setChannelPointIntegration();
-    return `Channel point integrations have been successfully enabled for ${param}`;
+    return `Channel point integrations have been successfully enabled for ${chan}`;
   },
 };
 
@@ -197,14 +211,17 @@ export const removeChannelPointsIntegration: CommonAdminCommand = {
   cmd: 'removechannelpointsintegration',
   shortDescription: 'Remove channel points integration from a twitch channel',
   usageInfo: 'usage: removechannelpointsintegration <channel>',
+  options: [{ name: 'channel', desc: 'Username of twitch channel to un-allow and leave', required: true }],
   handler: async (ctx, user, param) => {
-    if (!param) return 'Invalid syntax, must provide a channel to remove';
-    const channel = await TwitchChannel.getChannel(param);
-    if (!channel || !channel.channelPointsIntegration) return `Channel ${param} does not currently have channel points integration enabled. Nothing to do`;
+    let chan = param;
+    if (ctx.discordMsg?.cmd) chan = ctx.discordMsg?.cmd.options.getString('channel', true);
+    if (!chan) return 'Invalid syntax, must provide a channel to remove';
+    const channel = await TwitchChannel.getChannel(chan);
+    if (!channel || !channel.channelPointsIntegration) return `Channel ${chan} does not currently have channel points integration enabled. Nothing to do`;
     const userId = await TwitchApi.getTwitchUserID(channel.channel);
     await channel.setChannelPointIntegration(false);
     await TwitchEventClient.removeChannelPointsListener(userId);
-    return `Turned off channel point integration for: ${param}`;
+    return `Turned off channel point integration for: ${chan}`;
   },
 };
 
@@ -212,6 +229,7 @@ export const listChannelPointsIntegrations: CommonAdminCommand = {
   cmd: 'listchannelpointsintegrations',
   shortDescription: 'List the twitch channels which have channel point integration enabled',
   usageInfo: 'usage: listchannelpointsintegrations',
+  options: [],
   handler: async () => {
     const channels = await TwitchChannel.getChannelPointChannels();
     return `Channels: ${channels.map((x) => x.channel).join(', ') || 'none'}`;

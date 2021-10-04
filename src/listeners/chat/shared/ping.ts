@@ -5,5 +5,6 @@ export const ping: CommonAnonymousCommand = {
   category: 'Help',
   shortDescription: 'Check if I am online',
   usageInfo: 'usage: ping',
+  options: [],
   handler: async () => 'pong!',
 };

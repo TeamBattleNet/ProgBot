@@ -1,5 +1,5 @@
 import { CommonAnonymousCommand, CommonAdminCommand, registerCommonAnonymousCommand } from './common';
-import { wrap, parseNextWord, getEmote } from './utils';
+import { wrap, parseNextWord, getEmote, getDiscordChannelId } from './utils';
 import { DiscordClient } from '../discord/discordBot';
 import { TwitchIRCClient } from '../twitch/twitchIRC';
 import { SimpleCommand } from '../../../models/simpleCommand';
@@ -15,8 +15,9 @@ function simpleCommandToCommonAnonymousCommand(cmd: SimpleCommand): CommonAnonym
     category: 'Simple',
     shortDescription: cmd.cmd,
     usageInfo: `usage: ${cmd.cmd}`,
+    options: [],
     handler: async (ctx) => {
-      const chan = (ctx.chatType === 'discord' ? ctx.discordMsg?.channel.id : ctx.twitchMsg?.target.value) || '';
+      const chan = (ctx.chatType === 'discord' ? getDiscordChannelId(ctx.discordMsg!) : ctx.twitchMsg?.target.value) || '';
       const lastSent = SIMPLE_MSG_LAST_SENT_CACHE[cmd.cmd][chan];
       const now = new Date();
       // Don't re-send simple response if this cmd has been used in this channel in the last 5 seconds
@@ -44,9 +45,11 @@ export const listSimpleCommands: CommonAnonymousCommand = {
   category: 'General',
   shortDescription: 'View all of the simple commands that progbot currently has',
   usageInfo: 'usage: listsimplecommands',
-  handler: async () => {
+  options: [],
+  handler: async (ctx) => {
+    const cmdPrefix = ctx.chatType === 'discord' ? DiscordClient.cmdPrefix : TwitchIRCClient.cmdPrefix;
     const commands = await SimpleCommand.getAllCommands();
-    return `Available Simple Commands:\n${commands.map((cmd) => cmd.cmd).join(', ')}`;
+    return `Available Simple Commands:\n${cmdPrefix}${commands.map((cmd) => cmd.cmd).join(`, ${cmdPrefix}`)}`;
   },
 };
 
@@ -59,11 +62,24 @@ export const addSimpleCommand: CommonAdminCommand = {
 
   example: addsimplecommand bn3notes Find notes for speedrunning BN3 here: https://totally.a.real.link
   example (with emote): addsimplecommand prog Hello emote:ProgChamp emote:TalkToDad`,
+  options: [
+    { name: 'command', desc: 'Name of the simple command to remove', required: true },
+    { name: 'response', desc: 'Text of the response for this new command', required: true },
+  ],
   handler: async (ctx, _user, param) => {
-    const invalidSyntaxMessage = 'Invalid syntax. Try help addsimplecommand for usage information';
-    if (!param) return invalidSyntaxMessage;
-    const { word: cmd, remain: reply } = parseNextWord(param);
-    if (!reply) return invalidSyntaxMessage;
+    let cmd = '';
+    let reply = '';
+    if (ctx.discordMsg?.cmd) {
+      cmd = ctx.discordMsg?.cmd.options.getString('command', true);
+      reply = ctx.discordMsg?.cmd.options.getString('response', true);
+    } else {
+      const invalidSyntaxMessage = 'Invalid syntax. Try help addsimplecommand for usage information';
+      if (!param) return invalidSyntaxMessage;
+      const parsed = parseNextWord(param);
+      if (!parsed.remain) return invalidSyntaxMessage;
+      cmd = parsed.word;
+      reply = parsed.remain;
+    }
     // Ensure this command does not already exist on a bot
     if (TwitchIRCClient.doesCommandExist(cmd) || DiscordClient.doesCommandExist(cmd)) return `Command ${wrap(ctx, cmd)} already exists. Will not overwrite.`;
     for (const match of reply.match(emoteReplaceRegex) || []) {
@@ -73,7 +89,7 @@ export const addSimpleCommand: CommonAdminCommand = {
     // Create the command, saving it to the db
     const newCmd = await SimpleCommand.createNewCommand(cmd, reply);
     // Register the new command handler immediately after saving to db
-    registerCommonAnonymousCommand(simpleCommandToCommonAnonymousCommand(newCmd));
+    await registerCommonAnonymousCommand(simpleCommandToCommonAnonymousCommand(newCmd));
     return `New command ${wrap(ctx, cmd)} created!`;
   },
 };
@@ -83,13 +99,16 @@ export const removeSimpleCommand: CommonAdminCommand = {
   shortDescription: 'Remove a simple command from progbot',
   usageInfo: `usage: removesimplecommand <cmd>
   example: removesimplecommand bn3notes`,
+  options: [{ name: 'command', desc: 'Name of the simple command to remove', required: true }],
   handler: async (ctx, _user, param) => {
-    if (!param) return 'Please provide a command to remove';
-    const existingCmd = await SimpleCommand.getByCmd(param);
-    if (!existingCmd) return `Could not find simple command ${wrap(ctx, param)} to remove`;
+    let cmd = param;
+    if (ctx.discordMsg?.cmd) cmd = ctx.discordMsg?.cmd.options.getString('command', true);
+    if (!cmd) return 'Please provide a command to remove';
+    const existingCmd = await SimpleCommand.getByCmd(cmd);
+    if (!existingCmd) return `Could not find simple command ${wrap(ctx, cmd)} to remove`;
     await existingCmd.remove();
-    TwitchIRCClient.removeCommand(param);
-    DiscordClient.removeCommand(param);
-    return `Removed simple command ${wrap(ctx, param)} with reply:\n${existingCmd.reply}`;
+    TwitchIRCClient.removeCommand(cmd);
+    DiscordClient.removeCommand(cmd);
+    return `Removed simple command ${wrap(ctx, cmd)} with reply:\n${existingCmd.reply}`;
   },
 };

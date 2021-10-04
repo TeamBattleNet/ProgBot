@@ -1,4 +1,5 @@
 import { ChatContext } from './common';
+import type { DiscordMsgOrCmd } from '../discord/discordBot';
 
 const EMOTE_MAP: { [emote: string]: { [chatType: string]: string } } = {
   ProgChamp: { discord: '<:ProgChamp:281409807754461184>', twitch: 'ProgChamp' },
@@ -33,4 +34,17 @@ export function getEmote(ctx: ChatContext, emote: string) {
   const emotes = EMOTE_MAP[emote];
   if (!emotes) return '';
   return emotes[ctx.chatType] || '';
+}
+
+// Gets a discord user from a msgOrCmd
+export function getDiscordUser(msgOrCmd: DiscordMsgOrCmd) {
+  if (msgOrCmd.msg) return msgOrCmd.msg.author;
+  if (msgOrCmd.cmd) return msgOrCmd.cmd.user;
+  throw new Error('DiscordMsgOrCmd was neither a message nor a command');
+}
+
+export function getDiscordChannelId(msgOrCmd: DiscordMsgOrCmd) {
+  if (msgOrCmd.msg) return msgOrCmd.msg.channelId;
+  if (msgOrCmd.cmd) return msgOrCmd.cmd.channelId;
+  throw new Error('DiscordMsgOrCmd was neither a message nor a command');
 }

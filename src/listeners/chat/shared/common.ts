@@ -1,16 +1,16 @@
-import { DiscordClient, MsgHandler as DiscordMessageHandler } from '../discord/discordBot';
+import { DiscordClient, MsgHandler as DiscordMessageHandler, DiscordMsgOrCmd } from '../discord/discordBot';
 import { TwitchIRCClient, MsgHandler as TwitchMessageHandler } from '../twitch/twitchIRC';
 import { User } from '../../../models/user';
+import { getDiscordUser } from './utils';
 import type { CommandCategory } from '../../../types';
 import type { PrivateMessage as TwitchMessage } from '@twurple/chat';
-import type { Message as DiscordMessage } from 'discord.js';
 
 // If chat type is twitch, twitchMsg will be defined
 // If chat type is discord, discordMsg will be defined
 export interface ChatContext {
   chatType: 'twitch' | 'discord';
   twitchMsg?: TwitchMessage;
-  discordMsg?: DiscordMessage;
+  discordMsg?: DiscordMsgOrCmd;
 }
 
 type commonAnonymousMessageHandler = (chatContext: ChatContext, param?: string) => Promise<string>;
@@ -22,6 +22,7 @@ export interface CommonAnonymousCommand {
   category: CommandCategory;
   shortDescription: string;
   usageInfo: string;
+  options: { name: string; desc: string; required: boolean }[];
   handler: commonAnonymousMessageHandler;
 }
 
@@ -31,6 +32,7 @@ export interface CommonRegisteredCommand {
   category: CommandCategory;
   shortDescription: string;
   usageInfo: string;
+  options: { name: string; desc: string; required: boolean }[];
   handler: commonRegisteredMessageHandler;
 }
 
@@ -40,15 +42,17 @@ export interface CommonAdminCommand {
   // No category because all admin commands will be considered category 'Admin'
   shortDescription: string;
   usageInfo: string;
+  options: { name: string; desc: string; required: boolean }[];
   handler: commonRegisteredMessageHandler;
 }
 
-export function registerCommonAnonymousCommand(command: CommonAnonymousCommand) {
-  DiscordClient.registerCommand({
+export async function registerCommonAnonymousCommand(command: CommonAnonymousCommand) {
+  await DiscordClient.registerCommand({
     cmd: command.cmd,
     category: command.category,
     shortDescription: command.shortDescription,
     usageInfo: command.usageInfo,
+    options: command.options,
     handler: async (msg, param) => command.handler({ chatType: 'discord', discordMsg: msg }, param),
   });
   TwitchIRCClient.registerCommand({
@@ -60,12 +64,13 @@ export function registerCommonAnonymousCommand(command: CommonAnonymousCommand) 
   });
 }
 
-export function registerCommonRegisteredCommand(command: CommonRegisteredCommand) {
-  DiscordClient.registerCommand({
+export async function registerCommonRegisteredCommand(command: CommonRegisteredCommand) {
+  await DiscordClient.registerCommand({
     cmd: command.cmd,
     category: command.category,
     shortDescription: command.shortDescription,
     usageInfo: command.usageInfo,
+    options: command.options,
     handler: discordMessageWrapper(command.handler, false),
   });
   TwitchIRCClient.registerCommand({
@@ -77,12 +82,13 @@ export function registerCommonRegisteredCommand(command: CommonRegisteredCommand
   });
 }
 
-export function registerCommonAdminCommand(command: CommonAdminCommand) {
-  DiscordClient.registerCommand({
+export async function registerCommonAdminCommand(command: CommonAdminCommand) {
+  await DiscordClient.registerCommand({
     cmd: command.cmd,
     category: 'Admin',
     shortDescription: command.shortDescription,
     usageInfo: command.usageInfo,
+    options: command.options,
     handler: discordMessageWrapper(command.handler, true),
   });
   TwitchIRCClient.registerCommand({
@@ -96,8 +102,8 @@ export function registerCommonAdminCommand(command: CommonAdminCommand) {
 
 function discordMessageWrapper(handler: commonRegisteredMessageHandler, adminRequired: boolean): DiscordMessageHandler {
   return async (msg, param) => {
-    const user = await User.findByDiscordId(msg.author.id);
-    if (!user) return `You must be registered to use this function. Try ${DiscordClient.cmdPrefix}register first`;
+    const user = await User.findByDiscordId(getDiscordUser(msg).id);
+    if (!user) return `You must be registered to use this function. Try /register first`;
     if (adminRequired && !user.isAdmin()) return 'Permission denied';
     return handler({ chatType: 'discord', discordMsg: msg }, user, param);
   };

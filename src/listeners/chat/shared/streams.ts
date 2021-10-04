@@ -6,6 +6,7 @@ export const streams: CommonAnonymousCommand = {
   category: 'General',
   shortDescription: 'View the currently active BN-related streams',
   usageInfo: `usage: streams`,
+  options: [],
   handler: async (ctx) => {
     const isDiscord = ctx.chatType === 'discord';
     const streams = await getActiveStreams();

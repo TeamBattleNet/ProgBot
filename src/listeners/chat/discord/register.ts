@@ -1,4 +1,5 @@
 import type { DiscordCommand } from './discordBot';
+import { getDiscordUser } from '../shared/utils';
 import { User } from '../../../models/user';
 
 export const registerDiscord: DiscordCommand = {
@@ -6,10 +7,12 @@ export const registerDiscord: DiscordCommand = {
   category: 'Accounts',
   shortDescription: 'Register with ProgBot!',
   usageInfo: 'usage: register',
+  options: [],
   handler: async (msg) => {
-    const existingUser = await User.findByDiscordId(msg.author.id);
-    if (existingUser) return `<@${msg.author.id}> You are already registered!`;
-    await User.createNewUser({ discordUserId: msg.author.id });
-    return `<@${msg.author.id}> You are now registered!`;
+    const discordUserId = getDiscordUser(msg).id;
+    const existingUser = await User.findByDiscordId(discordUserId);
+    if (existingUser) return `<@${discordUserId}> You are already registered!`;
+    await User.createNewUser({ discordUserId: discordUserId });
+    return `<@${discordUserId}> You are now registered!`;
   },
 };

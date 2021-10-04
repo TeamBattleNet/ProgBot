@@ -1,8 +1,11 @@
-import { DiscordCommand } from './discordBot';
+import { DiscordCommand, DiscordMsgOrCmd } from './discordBot';
+import { getDiscordUser, getDiscordChannelId } from '../shared/utils';
 import { AnnounceChannel } from '../../../models/announceChannel';
 import { User } from '../../../models/user';
 
-async function makeAnnounceChannelHandler(authorId: string, channelId: string, speedrunOnly: boolean) {
+async function makeAnnounceChannelHandler(msg: DiscordMsgOrCmd, speedrunOnly: boolean) {
+  const authorId = getDiscordUser(msg).id;
+  const channelId = getDiscordChannelId(msg);
   const announceType = speedrunOnly ? 'speedrunlive' : 'live';
   const user = await User.findByDiscordId(authorId);
   if (!user || !user.isAdmin()) return 'Permission denied';
@@ -18,7 +21,8 @@ export const makeAnnounceChannel: DiscordCommand = {
   category: 'Admin',
   shortDescription: 'Mark the channel where this cmd is sent for use when announcing livestreams',
   usageInfo: 'usage: makeannouncechannel',
-  handler: async (msg) => makeAnnounceChannelHandler(msg.author.id, msg.channel.id, false),
+  options: [],
+  handler: async (msg) => makeAnnounceChannelHandler(msg, false),
 };
 
 export const makeSpeedrunAnnounceChannel: DiscordCommand = {
@@ -26,7 +30,8 @@ export const makeSpeedrunAnnounceChannel: DiscordCommand = {
   category: 'Admin',
   shortDescription: 'Mark the channel where this cmd is sent for use when announcing speedrun livestreams',
   usageInfo: 'usage: makespeedrunannouncechannel',
-  handler: async (msg) => makeAnnounceChannelHandler(msg.author.id, msg.channel.id, true),
+  options: [],
+  handler: async (msg) => makeAnnounceChannelHandler(msg, true),
 };
 
 export const removeAnnounceChannel: DiscordCommand = {
@@ -34,10 +39,11 @@ export const removeAnnounceChannel: DiscordCommand = {
   category: 'Admin',
   shortDescription: 'Remove the channel where this cmd is sent from use when announcing any livestreams',
   usageInfo: 'usage: removeannouncechannel',
+  options: [],
   handler: async (msg) => {
-    const user = await User.findByDiscordId(msg.author.id);
+    const user = await User.findByDiscordId(getDiscordUser(msg).id);
     if (!user || !user.isAdmin()) return 'Permission denied';
-    const channel = await AnnounceChannel.getChannel(msg.channel.id);
+    const channel = await AnnounceChannel.getChannel(getDiscordChannelId(msg));
     if (!channel || !['live', 'speedrunlive'].some(channel.announceTypes.has.bind(channel.announceTypes))) return 'This channel is not currently used to announce any livestreams!';
     channel.announceTypes.delete('live');
     channel.announceTypes.delete('speedrunlive');
