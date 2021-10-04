@@ -6,7 +6,11 @@ import type { CommandCategory } from '../../../types';
 
 const logger = getLogger('discord');
 
-const singletonClient = new discord.Client();
+// TODO re-add discord/erlpack as dependency once it's working again: https://github.com/discord/erlpack/pull/41
+const singletonClient = new discord.Client({
+  partials: ['CHANNEL'], // required for DMs: https://discordjs.guide/additional-info/changes-in-v13.html#dm-channels
+  intents: [discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MESSAGES, discord.Intents.FLAGS.DIRECT_MESSAGES],
+});
 
 export type MsgHandler = (msg: discord.Message, param?: string) => Promise<string>;
 // param input in the handler is the parsed message content after trimming the prepended command.
@@ -34,11 +38,11 @@ export class DiscordClient {
   public static async connect() {
     DiscordClient.registerCommand(DiscordClient.helpCommand);
     await DiscordClient.client.login(Config.getConfig().discord_token);
-    await DiscordClient.client.user?.setPresence({ activity: { type: 'PLAYING', name: `on the net - ${DiscordClient.cmdPrefix}help` } });
+    DiscordClient.client.user?.setPresence({ activities: [{ type: 'PLAYING', name: `on the net - ${DiscordClient.cmdPrefix}help` }] });
   }
 
   public static async nowReady() {
-    logger.info(`Discord client ready. Invite: ${await DiscordClient.client.generateInvite({ permissions: [discord.Permissions.FLAGS.ADMINISTRATOR] })}`);
+    logger.info(`Discord client ready. Invite: ${DiscordClient.client.generateInvite({ scopes: ['bot'], permissions: [discord.Permissions.FLAGS.ADMINISTRATOR] })}`);
   }
 
   public static async sendMessage(channelId: string, message: string) {
@@ -55,16 +59,13 @@ export class DiscordClient {
       const lowerCmd = cmd.toLowerCase();
       if (DiscordClient.commands[lowerCmd]) {
         // Start typing if reply takes time to generate (over 100ms)
-        let typing = false;
         const timeout = setTimeout(() => {
-          message.channel.startTyping().catch();
-          typing = true;
+          message.channel.sendTyping().catch();
         }, 100);
         try {
           const reply = await DiscordClient.commands[lowerCmd].handler(message, param);
           clearTimeout(timeout);
           if (reply) await message.channel.send(reply);
-          if (typing) message.channel.stopTyping(true);
         } catch (e) {
           logger.error(e);
           await message.channel.send('Internal Error');
@@ -136,6 +137,6 @@ export class DiscordClient {
 }
 
 singletonClient.on('ready', DiscordClient.nowReady);
-singletonClient.on('message', DiscordClient.handleMessage);
+singletonClient.on('messageCreate', DiscordClient.handleMessage);
 singletonClient.on('rateLimit', (r) => logger.warn(`Rate limit: ${r}`));
 singletonClient.on('error', logger.error);
