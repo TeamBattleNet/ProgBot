@@ -46,8 +46,8 @@ export interface CommonAdminCommand {
   handler: commonRegisteredMessageHandler;
 }
 
-export async function registerCommonAnonymousCommand(command: CommonAnonymousCommand) {
-  await DiscordClient.registerCommand({
+export function registerCommonAnonymousCommand(command: CommonAnonymousCommand) {
+  DiscordClient.registerCommand({
     cmd: command.cmd,
     category: command.category,
     shortDescription: command.shortDescription,
@@ -64,8 +64,8 @@ export async function registerCommonAnonymousCommand(command: CommonAnonymousCom
   });
 }
 
-export async function registerCommonRegisteredCommand(command: CommonRegisteredCommand) {
-  await DiscordClient.registerCommand({
+export function registerCommonRegisteredCommand(command: CommonRegisteredCommand) {
+  DiscordClient.registerCommand({
     cmd: command.cmd,
     category: command.category,
     shortDescription: command.shortDescription,
@@ -82,8 +82,8 @@ export async function registerCommonRegisteredCommand(command: CommonRegisteredC
   });
 }
 
-export async function registerCommonAdminCommand(command: CommonAdminCommand) {
-  await DiscordClient.registerCommand({
+export function registerCommonAdminCommand(command: CommonAdminCommand) {
+  DiscordClient.registerCommand({
     cmd: command.cmd,
     category: 'Admin',
     shortDescription: command.shortDescription,
