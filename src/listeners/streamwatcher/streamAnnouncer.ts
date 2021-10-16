@@ -96,9 +96,13 @@ export async function checkAndAnnounceStreams() {
           if (speedrunAnnounceChannels.length > 0) {
             await Promise.all(
               streams.map(async (stream) => {
-                const tags = await TwitchApi.getStreamTagsOfChannelName(stream.user);
-                if (tags.some((tag) => speedrunTwitchTagIds.has(tag))) {
-                  speedrunStreams.add(stream.id);
+                try {
+                  const tags = await TwitchApi.getStreamTagsOfChannelName(stream.user);
+                  if (tags.some((tag) => speedrunTwitchTagIds.has(tag))) {
+                    speedrunStreams.add(stream.id);
+                  }
+                } catch (e) {
+                  logger.error(`Couldn't get speedrun tags for ${stream.user}: ${e}`);
                 }
               })
             );
