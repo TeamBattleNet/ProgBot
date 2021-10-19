@@ -10,7 +10,8 @@ export interface TwitchStream {
   id: string;
   title: string;
   game: string;
-  user: string;
+  displayName: string;
+  username: string;
   start: Date;
   url: string;
 }
@@ -100,7 +101,8 @@ function apiStreamToStreamObj(stream: HelixStream): TwitchStream {
     id: stream.id,
     title: stream.title,
     game: stream.gameName,
-    user: stream.userDisplayName,
+    displayName: stream.userDisplayName,
+    username: stream.userName,
     start: stream.startDate,
     url: `https://twitch.tv/${stream.userName}`,
   };

@@ -14,10 +14,10 @@ export const streams: CommonAnonymousCommand = {
     // Special escape considerations for discord
     if (isDiscord)
       streams.forEach((stream) => {
-        stream.user = stream.user.replace('_', '\\_');
+        stream.displayName = stream.displayName.replace('_', '\\_');
         stream.url = `<${stream.url}>`;
       });
     const separator = isDiscord ? '!\n' : ': ';
-    return streams.map((stream) => `${stream.user} is streaming ${stream.game}${separator}${stream.url}`).join(isDiscord ? '\n' : ' | ');
+    return streams.map((stream) => `${stream.displayName} is streaming ${stream.game}${separator}${stream.url}`).join(isDiscord ? '\n' : ' | ');
   },
 };

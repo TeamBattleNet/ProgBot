@@ -97,12 +97,12 @@ export async function checkAndAnnounceStreams() {
             await Promise.all(
               streams.map(async (stream) => {
                 try {
-                  const tags = await TwitchApi.getStreamTagsOfChannelName(stream.user);
+                  const tags = await TwitchApi.getStreamTagsOfChannelName(stream.username);
                   if (tags.some((tag) => speedrunTwitchTagIds.has(tag))) {
                     speedrunStreams.add(stream.id);
                   }
                 } catch (e) {
-                  logger.error(`Couldn't get speedrun tags for ${stream.user}: ${e}`);
+                  logger.error(`Couldn't get speedrun tags for ${stream.username}: ${e}`);
                 }
               })
             );
@@ -139,7 +139,7 @@ async function checkAndAnnounceStream(cache: streamCache, stream: TwitchStream, 
   if (
     cache[stream.id] === undefined &&
     startTime < stream.start &&
-    !Object.values(cache).some((activeStream) => stream.user === activeStream.user && stream.title === activeStream.title && stream.game === activeStream.game)
+    !Object.values(cache).some((activeStream) => stream.username === activeStream.username && stream.title === activeStream.title && stream.game === activeStream.game)
   ) {
     /*
     Only announce if:
@@ -147,7 +147,7 @@ async function checkAndAnnounceStream(cache: streamCache, stream: TwitchStream, 
     Bot start time is before stream start time (so we don't announce duplicates if the bot restarts)
     Another announced (active) stream does not exist which has identical user/title/game (same stream restarted with new id)
     */
-    const announceMessage = `${stream.user.replace('_', '\\_')} is live playing: ${stream.game}\n<${stream.url}>\n\`\`\`${stream.title}\`\`\``;
+    const announceMessage = `${stream.displayName.replace('_', '\\_')} is live playing: ${stream.game}\n<${stream.url}>\n\`\`\`${stream.title}\`\`\``;
     await Promise.all(channels.map((chan) => DiscordClient.sendMessage(chan.channel, announceMessage)));
   }
   cache[stream.id] = { ...stream, misses: 0 };
