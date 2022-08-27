@@ -19,8 +19,8 @@
     "test": "NODE_ENV=test TS_NODE_FILES=true LOG_LEVEL=silent c8 --reporter=text mocha -r ts-node/register --color 'src/**/*.spec.ts' --exit",
     "test:docker": "docker build . -f test.Dockerfile -t progbot-testing-container && docker run -it progbot-testing-container",
     "typeorm:cli": "ts-node ./node_modules/typeorm/cli",
-    "migration:run": "yarn build && yarn typeorm:cli migration:run",
-    "migration:generate": "yarn typeorm:cli migration:generate",
+    "migration:run": "yarn build && yarn typeorm:cli migration:run -d dist/clients/database",
+    "migration:generate": "yarn typeorm:cli migration:generate -d dist/clients/database",
     "clean": "rm -rf dist/ coverage/"
   },
   "dependencies": {
@@ -38,7 +38,7 @@
     "loglevel-plugin-prefix": "^0.8.4",
     "source-map-support": "^0.5.21",
     "tslib": "^2.4.0",
-    "typeorm": "^0.3.8",
+    "typeorm": "0.3.7",
     "utf-8-validate": "^5.0.9",
     "uuid": "^8.3.2"
   },

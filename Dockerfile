@@ -18,7 +18,6 @@ ENV NODE_ENV production
 RUN mkdir runtime && echo '{}' > runtime/config.json && chown -R 1000:1000 .
 COPY --from=builder --chown=1000:1000 /app/dist ./dist
 COPY --from=builder --chown=1000:1000 /app/node_modules ./node_modules
-COPY --from=builder --chown=1000:1000 /app/ormconfig.js ./ormconfig.js
 COPY --from=builder --chown=1000:1000 /app/chips ./chips
 USER 1000:1000
-CMD ["sh", "-c", "node node_modules/typeorm/cli migration:run && node dist/index.js"]
+CMD ["sh", "-c", "node node_modules/typeorm/cli migration:run -d dist/clients/database && node dist/index.js"]

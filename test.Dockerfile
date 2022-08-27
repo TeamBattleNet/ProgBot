@@ -2,6 +2,7 @@ FROM node:16-alpine
 WORKDIR /app
 
 RUN apk --no-cache add python3-dev musl-dev make g++ git
+RUN mkdir runtime && echo '{}' > runtime/config.json
 COPY package.json .
 COPY yarn.lock .
 RUN yarn --frozen-lockfile --non-interactive

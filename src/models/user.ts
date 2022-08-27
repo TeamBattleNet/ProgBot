@@ -145,7 +145,7 @@ export class User extends BaseEntity {
     combinedUser.style = twitchUser.style;
     combinedUser.lastBrowseTime = twitchUser.lastBrowseTime > discordUser.lastBrowseTime ? twitchUser.lastBrowseTime : discordUser.lastBrowseTime;
     // Delete the old users and save the new combined one
-    await Database.connection.transaction(async (transactionManager) => {
+    await Database.datasource.transaction(async (transactionManager) => {
       await transactionManager.delete(User, [twitchUser.id, discordUser.id]);
       await transactionManager.save(combinedUser);
     });
