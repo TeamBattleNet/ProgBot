@@ -8,14 +8,14 @@ const logger = getLogger('discord');
 
 // TODO re-add discord/erlpack as dependency once it's working again: https://github.com/discord/erlpack/pull/41
 const singletonClient = new discord.Client({
-  partials: ['CHANNEL'], // required for DMs: https://discordjs.guide/additional-info/changes-in-v13.html#dm-channels
-  intents: [discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MESSAGES, discord.Intents.FLAGS.DIRECT_MESSAGES],
+  partials: [discord.Partials.Channel], // required for DMs: https://discordjs.guide/additional-info/changes-in-v13.html#dm-channels
+  intents: [discord.GatewayIntentBits.Guilds, discord.GatewayIntentBits.GuildMessages, discord.GatewayIntentBits.DirectMessages, discord.GatewayIntentBits.MessageContent],
 });
 
 export class DiscordMsgOrCmd {
   public msg?: discord.Message;
-  public cmd?: discord.CommandInteraction;
-  public constructor(msg?: discord.Message, cmd?: discord.CommandInteraction) {
+  public cmd?: discord.ChatInputCommandInteraction;
+  public constructor(msg?: discord.Message, cmd?: discord.ChatInputCommandInteraction) {
     if (msg) this.msg = msg;
     if (cmd) this.cmd = cmd;
   }
@@ -60,7 +60,7 @@ export class DiscordClient {
         name: data.cmd,
         description: data.desc,
         options: data.opts.map((opts) => {
-          return { type: 'STRING', name: opts.name, description: opts.desc, required: opts.required };
+          return { type: discord.ApplicationCommandOptionType.String, name: opts.name, description: opts.desc, required: opts.required };
         }),
       };
     });
@@ -71,24 +71,27 @@ export class DiscordClient {
         return {
           name: data.cmd,
           description: data.desc,
-          type: 'SUB_COMMAND',
+          type: discord.ApplicationCommandOptionType.Subcommand,
           options: data.opts.map((opts) => {
-            return { type: 'STRING', name: opts.name, description: opts.desc, required: opts.required };
+            return { type: discord.ApplicationCommandOptionType.String, name: opts.name, description: opts.desc, required: opts.required };
           }),
         };
       }),
     });
     await DiscordClient.client.application.commands.set(allDiscordCmds);
-    DiscordClient.client.user?.setPresence({ activities: [{ type: 'PLAYING', name: `on the net - /help` }] });
+    DiscordClient.client.user?.setPresence({ activities: [{ type: discord.ActivityType.Playing, name: `on the net - /help` }] });
     logger.info(
-      `Discord client ready. Invite: ${DiscordClient.client.generateInvite({ scopes: ['bot', 'applications.commands'], permissions: [discord.Permissions.FLAGS.ADMINISTRATOR] })}`
+      `Discord client ready. Invite: ${DiscordClient.client.generateInvite({
+        scopes: [discord.OAuth2Scopes.Bot, discord.OAuth2Scopes.ApplicationsCommands],
+        permissions: [discord.PermissionsBitField.Flags.Administrator],
+      })}`
     );
   }
 
   public static async sendMessage(channelId: string, message: string) {
-    const channel = DiscordClient.client.channels.cache.get(channelId) as discord.TextChannel;
+    const channel = DiscordClient.client.channels.cache.get(channelId);
     if (!channel) throw new Error(`Discord channel ${channelId} could not be found when trying to send a message`);
-    if (!channel.isText()) throw new Error(`Trying to send message to discord channel ${channelId} which is not a text channel!`);
+    if (!channel.isTextBased()) throw new Error(`Trying to send message to discord channel ${channelId} which is not a text channel!`);
     await channel.send(message);
   }
 
@@ -115,7 +118,7 @@ export class DiscordClient {
   }
 
   public static async handleInteraction(interaction: discord.Interaction) {
-    if (DiscordClient.client.application?.id === interaction.applicationId && interaction.isCommand()) {
+    if (DiscordClient.client.application?.id === interaction.applicationId && interaction.isChatInputCommand()) {
       logger.trace(
         `slash cmd: '${interaction.commandName}' params: '${interaction.options.data}' user: ${interaction.member?.user.username}#${interaction.member?.user.discriminator}`
       );

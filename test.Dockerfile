@@ -1,4 +1,4 @@
-FROM node:14-alpine
+FROM node:16-alpine
 WORKDIR /app
 
 RUN apk --no-cache add python3-dev musl-dev make g++ git

@@ -77,7 +77,7 @@ export const addAllowedTwitchChannel: CommonAdminCommand = {
     let chan = param;
     if (ctx.discordMsg?.cmd) chan = ctx.discordMsg?.cmd.options.getString('channel', true);
     if (!chan) return 'Invalid syntax, must provide a channel to join';
-    let channel: TwitchChannel | undefined = undefined;
+    let channel: TwitchChannel | null = null;
     // Check if channel is in cache or db first
     try {
       channel = TwitchIRCClient.getTwitchChannelFromCache(chan);
@@ -107,7 +107,7 @@ export const removeAllowedTwitchChannel: CommonAdminCommand = {
     let chan = param;
     if (ctx.discordMsg?.cmd) chan = ctx.discordMsg?.cmd.options.getString('channel', true);
     if (!chan) return 'Invalid syntax, must provide a channel to leave';
-    let channel: TwitchChannel | undefined = undefined;
+    let channel: TwitchChannel | null = null;
     // Retrieve channel from cache (or db if cache misses)
     try {
       channel = TwitchIRCClient.getTwitchChannelFromCache(chan);

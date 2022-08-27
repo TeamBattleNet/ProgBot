@@ -48,8 +48,8 @@ export const confirmLinkCommon: CommonRegisteredCommand = {
     let linkToken = param;
     if (ctx.discordMsg?.cmd) linkToken = ctx.discordMsg?.cmd.options.getString('linktoken', true);
     if (!linkToken) return `You must specify the token provided when starting the link from ${otherService} (${cmdPrefix}help confirmlink)`;
-    let twitchUser: User | undefined = undefined;
-    let discordUser: User | undefined = undefined;
+    let twitchUser: User | null = null;
+    let discordUser: User | null = null;
     if (ctx.chatType === 'twitch') {
       twitchUser = user;
       discordUser = await User.findByLinkToken(ctx.twitchMsg?.userInfo.userName.toLowerCase() || '', linkToken);
