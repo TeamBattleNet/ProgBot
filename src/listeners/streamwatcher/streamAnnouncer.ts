@@ -92,13 +92,11 @@ export async function checkAndAnnounceStreams() {
           const speedrunStreams = new Set<string>();
           // If we need to announce speedruns, find stream tags and filter out streams with speedrun tag(s)
           if (speedrunAnnounceChannels.length > 0) {
-            await Promise.all(
-              streams.map(async (stream) => {
-                if (stream.tags.some((tag) => speedrunTwitchTags.has(tag.toLowerCase()))) {
-                  speedrunStreams.add(stream.id);
-                }
-              })
-            );
+            streams.forEach((stream) => {
+              if (stream.tags.some((tag) => speedrunTwitchTags.has(tag.toLowerCase()))) {
+                speedrunStreams.add(stream.id);
+              }
+            });
           }
           for (const stream of streams) {
             // All streams
