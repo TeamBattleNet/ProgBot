@@ -30,12 +30,12 @@ export class TwitchEventClient {
 
   public static async addNewChannelPointsListener(channel: TwitchChannel) {
     const authProvider = await channel.getAuthProvider();
-    const userId = (await authProvider.getAnyAccessToken()).userId;
-    if (!userId) throw new Error("Couldn't get userId from channel auth provider");
+    const channelToken = await authProvider.getAccessTokenForIntent('auth');
+    if (!channelToken || !channelToken.userId) throw new Error("Couldn't get userId from channel auth provider");
     const pubSubClient = new PubSubClient({ authProvider });
-    if (TwitchEventClient.listeners[userId]) TwitchEventClient.listeners[userId].remove();
-    delete TwitchEventClient.listeners[userId];
-    TwitchEventClient.listeners[userId] = pubSubClient.onRedemption(userId, TwitchEventClient.redemptionHandler);
+    if (TwitchEventClient.listeners[channelToken.userId]) TwitchEventClient.listeners[channelToken.userId].remove();
+    delete TwitchEventClient.listeners[channelToken.userId];
+    TwitchEventClient.listeners[channelToken.userId] = pubSubClient.onRedemption(channelToken.userId, TwitchEventClient.redemptionHandler);
     logger.info(`Now listening for channel point redemptions on ${channel.channel}`);
   }
 
