@@ -2,8 +2,7 @@ import { Entity, PrimaryColumn, Column, BaseEntity } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { Config } from '../clients/configuration';
 import { getRedirectURI } from '../utils';
-import { ApiClient } from '@twurple/api';
-import { RefreshingAuthProvider, StaticAuthProvider, AccessToken } from '@twurple/auth';
+import { RefreshingAuthProvider, AccessToken, getTokenInfo } from '@twurple/auth';
 
 @Entity()
 export class TwitchChannel extends BaseEntity {
@@ -75,9 +74,9 @@ export class TwitchChannel extends BaseEntity {
 
   public async setAuthTokens(accessToken: string, refreshToken: string, checkOwnership = false) {
     if (checkOwnership) {
-      const apiClient = new ApiClient({ authProvider: new StaticAuthProvider(Config.getConfig().twitch_app_client_id, accessToken) });
-      const tokenUser = await apiClient.users.getMe(false);
-      if (tokenUser.name.toLowerCase() !== this.channel) return false;
+      const tokenInfo = await getTokenInfo(accessToken, Config.getConfig().twitch_app_client_id);
+      const channelName = tokenInfo.userName || '';
+      if (channelName.toLowerCase() !== this.channel) return false;
     }
     this.oauthTokenState = null;
     this.accessToken = accessToken;
@@ -86,21 +85,20 @@ export class TwitchChannel extends BaseEntity {
     return true;
   }
 
-  public getAuthProvider() {
+  public async getAuthProvider() {
     if (!this.accessToken || !this.refreshToken) throw new Error(`Twitch channel ${this.channel} has not authorized with progbot`);
-    return new RefreshingAuthProvider(
-      {
-        clientId: Config.getConfig().twitch_app_client_id,
-        clientSecret: Config.getConfig().twitch_app_client_secret,
-        onRefresh: (async (token: AccessToken) => await this.setAuthTokens(token.accessToken, token.refreshToken || '')).bind(this),
-      },
-      {
-        accessToken: this.accessToken,
-        refreshToken: this.refreshToken,
-        expiresIn: 0,
-        obtainmentTimestamp: 0,
-      }
-    );
+    const authProvider = new RefreshingAuthProvider({
+      clientId: Config.getConfig().twitch_app_client_id,
+      clientSecret: Config.getConfig().twitch_app_client_secret,
+      onRefresh: (async (userId: string, token: AccessToken) => await this.setAuthTokens(token.accessToken, token.refreshToken || '')).bind(this),
+    });
+    await authProvider.addUserForToken({
+      accessToken: this.accessToken,
+      refreshToken: this.refreshToken,
+      expiresIn: 0,
+      obtainmentTimestamp: 0,
+    });
+    return authProvider;
   }
 
   public async setChannelPointIntegration(enabled = true) {

@@ -1,6 +1,7 @@
 import 'source-map-support/register';
 import 'reflect-metadata'; // for TypeORM
 import { Database } from './clients/database';
+import { TwitchApi } from './clients/twitchApi';
 import { Chip } from './models/chip';
 import { startWebserver, stopWebserver } from './listeners/webserver/server';
 import { DiscordClient } from './listeners/chat/discord/discordBot';
@@ -21,6 +22,7 @@ async function main() {
   await startWebserver();
   await initializeChatBotHandlers();
   logger.info('Connecting to twitch');
+  await TwitchApi.initialize();
   await TwitchIRCClient.connect();
   initializeChannelPointHandlers();
   await TwitchEventClient.connect();

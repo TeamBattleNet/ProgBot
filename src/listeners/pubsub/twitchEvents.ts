@@ -1,10 +1,8 @@
 import { TwitchChannel } from '../../models/twitchChannel';
 import { getLogger } from '../../logger';
-import { PubSubClient, PubSubListener, PubSubRedemptionMessage } from '@twurple/pubsub';
+import { PubSubClient, PubSubHandler, PubSubRedemptionMessage } from '@twurple/pubsub';
 
 const logger = getLogger('twitchPubSub');
-
-const singletonClient = new PubSubClient();
 
 export type ChannelPointHandler = (msg: PubSubRedemptionMessage) => any;
 
@@ -14,9 +12,8 @@ export interface TwitchReward {
 }
 
 export class TwitchEventClient {
-  public static client = singletonClient;
   private static channelPointHandlers: { [rewardTitle: string]: ChannelPointHandler | undefined } = {};
-  private static listeners: { [userId: string]: PubSubListener } = {};
+  private static listeners: { [userId: string]: PubSubHandler<never> } = {};
 
   public static async connect() {
     const channels = await TwitchChannel.getChannelPointChannels();
@@ -32,10 +29,13 @@ export class TwitchEventClient {
   }
 
   public static async addNewChannelPointsListener(channel: TwitchChannel) {
-    const user = await singletonClient.registerUserListener(channel.getAuthProvider());
-    if (TwitchEventClient.listeners[user]) await TwitchEventClient.listeners[user].remove();
-    delete TwitchEventClient.listeners[user];
-    TwitchEventClient.listeners[user] = await singletonClient.onRedemption(user, TwitchEventClient.redemptionHandler);
+    const authProvider = await channel.getAuthProvider();
+    const userId = (await authProvider.getAnyAccessToken()).userId;
+    if (!userId) throw new Error("Couldn't get userId from channel auth provider");
+    const pubSubClient = new PubSubClient({ authProvider });
+    if (TwitchEventClient.listeners[userId]) TwitchEventClient.listeners[userId].remove();
+    delete TwitchEventClient.listeners[userId];
+    TwitchEventClient.listeners[userId] = pubSubClient.onRedemption(userId, TwitchEventClient.redemptionHandler);
     logger.info(`Now listening for channel point redemptions on ${channel.channel}`);
   }
 

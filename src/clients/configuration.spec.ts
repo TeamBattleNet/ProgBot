@@ -35,7 +35,7 @@ describe('coniguration', () => {
 
   describe('updateTwitchAuthTokens', () => {
     it('updates config with provided tokens', async () => {
-      await Config.updateTwitchAuthToken({ accessToken: 'accessToken', refreshToken: 'refreshToken' } as any);
+      await Config.updateTwitchAuthToken('userid', { accessToken: 'accessToken', refreshToken: 'refreshToken' } as any);
       const fileContents = JSON.parse(await fs.readFile('runtime/config.json', 'utf8'));
       expect(fileContents.twitch_bot_access_token).to.equal('accessToken');
       expect(fileContents.twitch_bot_refresh_token).to.equal('refreshToken');

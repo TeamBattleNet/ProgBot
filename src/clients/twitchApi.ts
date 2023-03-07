@@ -10,6 +10,7 @@ export interface TwitchStream {
   id: string;
   title: string;
   game: string;
+  tags: string[];
   displayName: string;
   username: string;
   start: Date;
@@ -21,20 +22,24 @@ export class TwitchApi {
     throwHttpErrors: false,
     timeout: 30000,
   });
-  public static AuthProvider = new RefreshingAuthProvider(
-    {
-      clientId: Config.getConfig().twitch_app_client_id,
-      clientSecret: Config.getConfig().twitch_app_client_secret,
-      onRefresh: Config.updateTwitchAuthToken,
-    },
-    {
-      accessToken: Config.getConfig().twitch_bot_access_token,
-      refreshToken: Config.getConfig().twitch_bot_refresh_token,
-      expiresIn: 0,
-      obtainmentTimestamp: 0,
-    }
-  );
+  public static AuthProvider = new RefreshingAuthProvider({
+    clientId: Config.getConfig().twitch_app_client_id,
+    clientSecret: Config.getConfig().twitch_app_client_secret,
+    onRefresh: Config.updateTwitchAuthToken,
+  });
   public static client = new ApiClient({ authProvider: TwitchApi.AuthProvider });
+
+  public static async initialize() {
+    await TwitchApi.AuthProvider.addUserForToken(
+      {
+        accessToken: Config.getConfig().twitch_bot_access_token,
+        refreshToken: Config.getConfig().twitch_bot_refresh_token,
+        expiresIn: 0,
+        obtainmentTimestamp: 0,
+      },
+      ['chat']
+    );
+  }
 
   public static async getStreamsOfGames(twitchGameIds: string[]) {
     if (twitchGameIds.length === 0) return [];
@@ -44,14 +49,6 @@ export class TwitchApi {
   public static async getStreamsOfUsers(twitchUserIds: string[]) {
     if (twitchUserIds.length === 0) return [];
     return (await TwitchApi.client.streams.getStreamsPaginated({ userId: twitchUserIds }).getAll()).map(apiStreamToStreamObj);
-  }
-
-  // returns an empty array if channel could not be found
-  public static async getStreamTagsOfChannelName(twitchChannelName: string) {
-    const userId = await TwitchApi.getTwitchUserID(twitchChannelName);
-    if (userId) return (await TwitchApi.client.streams.getStreamTags(userId)).map((tag) => tag.id);
-    logger.warn(`Could not find twitch user by name ${twitchChannelName}`);
-    return [];
   }
 
   // returns an empty string if not found
@@ -101,6 +98,7 @@ function apiStreamToStreamObj(stream: HelixStream): TwitchStream {
     id: stream.id,
     title: stream.title,
     game: stream.gameName,
+    tags: stream.tags,
     displayName: stream.userDisplayName,
     username: stream.userName,
     start: stream.startDate,

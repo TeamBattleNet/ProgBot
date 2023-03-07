@@ -55,9 +55,7 @@ const mmbnGameTwitchIds = [
   '172137957', // Ryūsei no Rockman: Denpa Henkan! On Air!
 ];
 
-const speedrunTwitchTagIds = new Set([
-  '7cefbf30-4c3e-4aa7-99cd-70aabb662f27', // Speedrun
-]);
+const speedrunTwitchTags = new Set(['speedrun', 'speedruns', 'pbattempt', 'pbattempts', 'wrattempt', 'wrattempts', 'anypercent', '100percent', 'rta']);
 
 export async function getActiveStreams() {
   const gameStreams = TwitchApi.getStreamsOfGames(mmbnGameTwitchIds);
@@ -96,13 +94,8 @@ export async function checkAndAnnounceStreams() {
           if (speedrunAnnounceChannels.length > 0) {
             await Promise.all(
               streams.map(async (stream) => {
-                try {
-                  const tags = await TwitchApi.getStreamTagsOfChannelName(stream.username);
-                  if (tags.some((tag) => speedrunTwitchTagIds.has(tag))) {
-                    speedrunStreams.add(stream.id);
-                  }
-                } catch (e) {
-                  logger.error(`Couldn't get speedrun tags for ${stream.username}: ${e}`);
+                if (stream.tags.some((tag) => speedrunTwitchTags.has(tag.toLowerCase()))) {
+                  speedrunStreams.add(stream.id);
                 }
               })
             );

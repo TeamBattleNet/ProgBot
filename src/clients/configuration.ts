@@ -16,7 +16,7 @@ export class Config {
     Config.configCache = JSON.parse(readFileSync(CONFIG_FILE_PATH, 'utf8'));
   }
 
-  public static async updateTwitchAuthToken(newToken: AccessToken) {
+  public static async updateTwitchAuthToken(_userId: string, newToken: AccessToken) {
     const currentConf = Config.getConfig();
     currentConf.twitch_bot_access_token = newToken.accessToken;
     currentConf.twitch_bot_refresh_token = newToken.refreshToken || '';

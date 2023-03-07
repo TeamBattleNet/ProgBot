@@ -44,12 +44,12 @@ export class TwitchIRCClient {
   }
 
   public static async postRegistration() {
-    if (!TwitchIRCClient.client.currentNick) {
+    if (!TwitchIRCClient.client.irc.currentNick) {
       // Should never happen unless there is an issue with the IRC client
       logger.error('Twitch irc registration complete but nick not defined');
       return;
     }
-    TwitchIRCClient.username = TwitchIRCClient.client.currentNick.toLowerCase();
+    TwitchIRCClient.username = TwitchIRCClient.client.irc.currentNick.toLowerCase();
     logger.info(`Twitch user ${TwitchIRCClient.username} logged into chat`);
     // Join channels here
     const channels = await TwitchChannel.getAllChannels();
@@ -136,6 +136,6 @@ export class TwitchIRCClient {
   }
 }
 
-singletonClient.onRegister(TwitchIRCClient.postRegistration);
+singletonClient.irc.onRegister(TwitchIRCClient.postRegistration);
 singletonClient.onMessage(TwitchIRCClient.handleMessage);
-singletonClient.onAnyMessage(logger.trace);
+singletonClient.irc.onAnyMessage(logger.trace);
