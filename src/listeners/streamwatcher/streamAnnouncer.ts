@@ -55,7 +55,7 @@ const mmbnGameTwitchIds = [
   '172137957', // Ryūsei no Rockman: Denpa Henkan! On Air!
 ];
 
-const speedrunTwitchTags = new Set(['speedrun', 'speedruns', 'pbattempt', 'pbattempts', 'wrattempt', 'wrattempts', 'anypercent', '100percent', 'rta']);
+const speedrunTwitchTags = new Set(['speedrun', 'speedruns', 'rta']);
 
 export async function getActiveStreams() {
   const gameStreams = TwitchApi.getStreamsOfGames(mmbnGameTwitchIds);
