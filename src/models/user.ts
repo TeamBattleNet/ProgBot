@@ -138,7 +138,7 @@ export class User extends BaseEntity {
     combinedUser.bugfrags = twitchUser.bugfrags + discordUser.bugfrags;
     const combinedBattleChips = new BattleChips();
     [twitchUser.battlechips, discordUser.battlechips].forEach((battlechips) =>
-      battlechips.getAllCounts().forEach(([id, count]) => combinedBattleChips.setCount(id, combinedBattleChips.getCount(id) + count))
+      battlechips.getAllCounts().forEach(([id, count]) => combinedBattleChips.setCount(id, combinedBattleChips.getCount(id) + count)),
     );
     combinedUser.battlechips = combinedBattleChips;
     // Always take style from twitch user

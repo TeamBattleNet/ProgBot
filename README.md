@@ -27,7 +27,7 @@ The schema of this configuration file is as follows:
 
 ## Development
 
-This project uses nodejs 16+ with typescript and the [yarn](https://classic.yarnpkg.com) package manager.
+This project uses nodejs 18+ with typescript and the [yarn](https://classic.yarnpkg.com) package manager.
 
 After cloning, run `yarn` to install the dependencies. If this is the first time running the application,
 (or first time since db models/schemas have been updated), database migrations need to run in order to

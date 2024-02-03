@@ -108,7 +108,7 @@ export async function checkAndAnnounceStreams() {
         logger.debug('Stream discovery/announce complete');
       })(),
       CHECK_TIMEOUT_MS,
-      new Error('Check timed out')
+      new Error('Check timed out'),
     );
   } catch (e) {
     logger.error('Unexpected error fetching/announcing streams:', e);

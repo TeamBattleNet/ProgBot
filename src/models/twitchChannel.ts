@@ -90,8 +90,8 @@ export class TwitchChannel extends BaseEntity {
     const authProvider = new RefreshingAuthProvider({
       clientId: Config.getConfig().twitch_app_client_id,
       clientSecret: Config.getConfig().twitch_app_client_secret,
-      onRefresh: (async (userId: string, token: AccessToken) => await this.setAuthTokens(token.accessToken, token.refreshToken || '')).bind(this),
     });
+    authProvider.onRefresh((async (userId: string, token: AccessToken) => await this.setAuthTokens(token.accessToken, token.refreshToken || '')).bind(this));
     await authProvider.addUserForToken(
       {
         accessToken: this.accessToken,
@@ -99,7 +99,7 @@ export class TwitchChannel extends BaseEntity {
         expiresIn: 0,
         obtainmentTimestamp: 0,
       },
-      ['auth']
+      ['auth'],
     );
     return authProvider;
   }

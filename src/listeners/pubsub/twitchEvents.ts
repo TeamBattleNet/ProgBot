@@ -24,7 +24,7 @@ export class TwitchEventClient {
         } catch (e) {
           logger.error(`Could not enable channel points listener for ${channel.channel}: ${e}`);
         }
-      })
+      }),
     );
   }
 

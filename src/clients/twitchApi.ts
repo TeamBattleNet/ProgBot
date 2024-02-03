@@ -25,11 +25,11 @@ export class TwitchApi {
   public static AuthProvider = new RefreshingAuthProvider({
     clientId: Config.getConfig().twitch_app_client_id,
     clientSecret: Config.getConfig().twitch_app_client_secret,
-    onRefresh: Config.updateTwitchAuthToken,
   });
   public static client = new ApiClient({ authProvider: TwitchApi.AuthProvider });
 
   public static async initialize() {
+    TwitchApi.AuthProvider.onRefresh(Config.updateTwitchAuthToken);
     await TwitchApi.AuthProvider.addUserForToken(
       {
         accessToken: Config.getConfig().twitch_bot_access_token,
@@ -37,7 +37,7 @@ export class TwitchApi {
         expiresIn: 0,
         obtainmentTimestamp: 0,
       },
-      ['chat']
+      ['chat'],
     );
   }
 

@@ -3,7 +3,7 @@ import { Config } from '../../../clients/configuration';
 import { TwitchApi } from '../../../clients/twitchApi';
 import { TwitchChannel } from '../../../models/twitchChannel';
 import { getLogger } from '../../../logger';
-import { ChatClient, PrivateMessage } from '@twurple/chat';
+import { ChatClient, ChatMessage } from '@twurple/chat';
 import type { CommandCategory } from '../../../types';
 
 const logger = getLogger('twitchIRC');
@@ -14,7 +14,7 @@ const singletonClient = new ChatClient({
   logger: { emoji: false },
 });
 
-export type MsgHandler = (msg: PrivateMessage, param?: string) => Promise<string>;
+export type MsgHandler = (msg: ChatMessage, param?: string) => Promise<string>;
 // param input in the handler is the parsed message content after trimming the prepended command.
 // Return the string content for replying to the message, or an empty string if a general reply is not desired.
 export interface TwitchCommand {
@@ -40,7 +40,7 @@ export class TwitchIRCClient {
   private static channelsCache: { [channel: string]: TwitchChannel | undefined } = {};
 
   public static async connect() {
-    await TwitchIRCClient.client.connect();
+    TwitchIRCClient.client.connect();
   }
 
   public static async postRegistration() {
@@ -64,7 +64,7 @@ export class TwitchIRCClient {
         } catch {
           logger.error(`Failed to join twitch channel ${channel.channel}`);
         }
-      })
+      }),
     );
   }
 
@@ -94,19 +94,19 @@ export class TwitchIRCClient {
     await TwitchIRCClient.client.say(`#${chan.channel}`, msg);
   }
 
-  public static async handleMessage(_chan: string, _usr: string, _msg: string, msg: PrivateMessage) {
-    if (msg.content.value.startsWith(TwitchIRCClient.cmdPrefix)) {
-      const channel = msg.target.value.substring(1).toLowerCase();
-      const { word: cmd, remain: param } = parseNextWord(msg.content.value, TwitchIRCClient.cmdPrefix.length);
+  public static async handleMessage(_chan: string, _usr: string, _msg: string, msg: ChatMessage) {
+    if (msg.text.startsWith(TwitchIRCClient.cmdPrefix)) {
+      const channel = msg.target.substring(1).toLowerCase();
+      const { word: cmd, remain: param } = parseNextWord(msg.text, TwitchIRCClient.cmdPrefix.length);
       logger.trace(`cmd: '${cmd}' params: '${param}' channel: '${channel}' user: ${msg.userInfo.userName}`);
       const lowerCmd = cmd.toLowerCase();
       if (TwitchIRCClient.commands[lowerCmd] && !TwitchIRCClient.channelsCache[channel]?.isDisabledCommand(lowerCmd)) {
         try {
           const reply = await TwitchIRCClient.commands[lowerCmd].handler(msg, param);
-          if (reply) TwitchIRCClient.client.say(msg.target.value, reply);
+          if (reply) TwitchIRCClient.client.say(msg.target, reply);
         } catch (e) {
           logger.error(e);
-          TwitchIRCClient.client.say(msg.target.value, 'Internal Error');
+          TwitchIRCClient.client.say(msg.target, 'Internal Error');
         }
       }
     }

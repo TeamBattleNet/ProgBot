@@ -3,7 +3,7 @@ import { TwitchIRCClient, MsgHandler as TwitchMessageHandler } from '../twitch/t
 import { User } from '../../../models/user';
 import { getDiscordUser } from './utils';
 import type { CommandCategory } from '../../../types';
-import type { PrivateMessage as TwitchMessage } from '@twurple/chat';
+import type { ChatMessage as TwitchMessage } from '@twurple/chat';
 
 // If chat type is twitch, twitchMsg will be defined
 // If chat type is discord, discordMsg will be defined

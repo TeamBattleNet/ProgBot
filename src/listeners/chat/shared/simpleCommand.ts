@@ -17,7 +17,7 @@ function simpleCommandToCommonAnonymousCommand(cmd: SimpleCommand): CommonAnonym
     usageInfo: `usage: ${cmd.cmd}`,
     options: [],
     handler: async (ctx) => {
-      const chan = (ctx.chatType === 'discord' ? getDiscordChannelId(ctx.discordMsg!) : ctx.twitchMsg?.target.value) || '';
+      const chan = (ctx.chatType === 'discord' ? getDiscordChannelId(ctx.discordMsg!) : ctx.twitchMsg?.target) || '';
       const lastSent = SIMPLE_MSG_LAST_SENT_CACHE[cmd.cmd][chan];
       const now = new Date();
       // Don't re-send simple response if this cmd has been used in this channel in the last 5 seconds

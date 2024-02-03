@@ -84,7 +84,7 @@ export class DiscordClient {
       `Discord client ready. Invite: ${DiscordClient.client.generateInvite({
         scopes: [discord.OAuth2Scopes.Bot, discord.OAuth2Scopes.ApplicationsCommands],
         permissions: [discord.PermissionsBitField.Flags.Administrator],
-      })}`
+      })}`,
     );
   }
 
@@ -120,7 +120,7 @@ export class DiscordClient {
   public static async handleInteraction(interaction: discord.Interaction) {
     if (DiscordClient.client.application?.id === interaction.applicationId && interaction.isChatInputCommand()) {
       logger.trace(
-        `slash cmd: '${interaction.commandName}' params: '${interaction.options.data}' user: ${interaction.member?.user.username}#${interaction.member?.user.discriminator}`
+        `slash cmd: '${interaction.commandName}' params: '${interaction.options.data}' user: ${interaction.member?.user.username}#${interaction.member?.user.discriminator}`,
       );
       let lowerCmd = interaction.commandName.toLowerCase();
       if (lowerCmd === 'admin') lowerCmd = interaction.options.getSubcommand(true).toLowerCase();

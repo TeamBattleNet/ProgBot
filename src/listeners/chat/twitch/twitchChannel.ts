@@ -17,7 +17,7 @@ export const disableCmdOnChannel: TwitchCommand = {
     // Make action only available to channel owner (broadcaster) or channel mods
     if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return 'Permission denied';
     if (!param || param.indexOf(',') !== -1) return 'Invalid syntax. Please provide a command to disable';
-    const channel = TwitchIRCClient.getTwitchChannelFromCache(msg.target.value);
+    const channel = TwitchIRCClient.getTwitchChannelFromCache(msg.target);
     await channel.addDisabledCommands([param]);
     return `Command ${param} disabled on twitch channel ${channel.channel}`;
   },
@@ -32,7 +32,7 @@ export const enableCmdOnChannel: TwitchCommand = {
     // Make action only available to channel owner (broadcaster) or channel mods
     if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return 'Permission denied';
     if (!param) return 'Invalid syntax. Please provide a command to enable';
-    const channel = TwitchIRCClient.getTwitchChannelFromCache(msg.target.value);
+    const channel = TwitchIRCClient.getTwitchChannelFromCache(msg.target);
     if (!channel.disabledCommands.has(param)) return `Command ${param} is not disabled!`;
     await channel.removeDisabledCommands([param]);
     return `Command ${param} re-enabled on twitch channel ${channel.channel}`;
@@ -47,7 +47,7 @@ export const listDisabledCmdsOnChannel: TwitchCommand = {
   handler: async (msg) => {
     // Make action only available to channel owner (broadcaster) or channel mods
     if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return 'Permission denied';
-    const channel = TwitchIRCClient.getTwitchChannelFromCache(msg.target.value);
+    const channel = TwitchIRCClient.getTwitchChannelFromCache(msg.target);
     return `Disabled cmds: ${[...channel.disabledCommands].join(', ') || 'none'}`;
   },
 };
@@ -60,7 +60,7 @@ export const setMinBrowseTime: TwitchCommand = {
   handler: async (msg, param) => {
     // Make action only available to channel owner (broadcaster) or channel mods
     if (!msg.userInfo.isBroadcaster && !msg.userInfo.isMod) return 'Permission denied';
-    const channel = TwitchIRCClient.getTwitchChannelFromCache(msg.target.value);
+    const channel = TwitchIRCClient.getTwitchChannelFromCache(msg.target);
     const num = Number.parseInt(param || '');
     if (isNaN(num)) return 'Please provide a valid number of seconds';
     await channel.setMinBrowseSeconds(num);
@@ -154,7 +154,7 @@ export const reloadAllowedTwitchChannels: CommonAdminCommand = {
         } catch {
           failedJoinedChannels.push(chan.channel);
         }
-      })
+      }),
     );
     response += `Successfully Joined Channels: ${successfullyJoinedChannels.join(', ') || 'none'}${separator}`;
     response += `Failed to Join Channels: ${failedJoinedChannels.join(', ') || 'none'}`;
