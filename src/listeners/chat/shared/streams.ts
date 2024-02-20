@@ -1,5 +1,5 @@
-import { CommonAnonymousCommand } from './common';
-import { getActiveStreams } from '../../streamwatcher/streamAnnouncer';
+import { CommonAnonymousCommand } from './common.js';
+import { getActiveStreams } from '../../streamwatcher/streamAnnouncer.js';
 
 export const streams: CommonAnonymousCommand = {
   cmd: 'streams',

@@ -1,8 +1,8 @@
-import { CommonAnonymousCommand, CommonAdminCommand, registerCommonAnonymousCommand } from './common';
-import { wrap, parseNextWord, getEmote, getDiscordChannelId } from './utils';
-import { DiscordClient } from '../discord/discordBot';
-import { TwitchIRCClient } from '../twitch/twitchIRC';
-import { SimpleCommand } from '../../../models/simpleCommand';
+import { CommonAnonymousCommand, CommonAdminCommand, registerCommonAnonymousCommand } from './common.js';
+import { wrap, parseNextWord, getEmote, getDiscordChannelId } from './utils.js';
+import { DiscordClient } from '../discord/discordBot.js';
+import { TwitchIRCClient } from '../twitch/twitchIRC.js';
+import { SimpleCommand } from '../../../models/simpleCommand.js';
 
 const emoteReplaceRegex = /emote:[^ ]+/gm;
 

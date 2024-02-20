@@ -1,7 +1,7 @@
-import { User } from '../../models/user';
-import { TwitchApi } from '../../clients/twitchApi';
-import { TwitchIRCClient } from '../../listeners/chat/twitch/twitchIRC';
-import { TwitchReward } from './twitchEvents';
+import { User } from '../../models/user.js';
+import { TwitchApi } from '../../clients/twitchApi.js';
+import { TwitchIRCClient } from '../../listeners/chat/twitch/twitchIRC.js';
+import { TwitchReward } from './twitchEvents.js';
 
 export const styleChange: TwitchReward = {
   rewardTitle: '!StyleChange',

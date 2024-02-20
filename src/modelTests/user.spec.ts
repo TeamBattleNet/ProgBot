@@ -1,25 +1,19 @@
-import { SinonSandbox, createSandbox, SinonStub, assert } from 'sinon';
-import { expect } from 'chai';
-import { User } from '../models/user';
+import { describe, it, expect, beforeEach, vi, afterEach, MockInstance } from 'vitest';
+import { User } from '../models/user.js';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('User', () => {
-  let sandbox: SinonSandbox;
+  let user: User;
 
   beforeEach(() => {
-    sandbox = createSandbox();
+    user = new User();
   });
 
   afterEach(() => {
-    sandbox.restore();
+    vi.restoreAllMocks();
   });
 
   describe('isAdmin', () => {
-    let user: User;
-
-    beforeEach(() => {
-      user = new User();
-    });
     it('Returns true if user is admin class', () => {
       user.userClass = 'admin';
       expect(user.isAdmin()).to.be.true;
@@ -32,12 +26,6 @@ describe('User', () => {
   });
 
   describe('hasTwitchId', () => {
-    let user: User;
-
-    beforeEach(() => {
-      user = new User();
-    });
-
     it('Returns true if user has non-placeholder twitch id', () => {
       user.twitchUserId = 'something';
       expect(user.hasTwitchId()).to.be.true;
@@ -50,12 +38,6 @@ describe('User', () => {
   });
 
   describe('hasDiscordId', () => {
-    let user: User;
-
-    beforeEach(() => {
-      user = new User();
-    });
-
     it('Returns true if user has non-placeholder discord id', () => {
       user.discordUserId = 'something';
       expect(user.hasDiscordId()).to.be.true;
@@ -68,78 +50,79 @@ describe('User', () => {
   });
 
   describe('getNewApiKey', () => {
-    let user: User;
-    let saveStub: SinonStub;
+    let saveMock: MockInstance;
 
     beforeEach(() => {
-      user = new User();
-      saveStub = sandbox.stub(user, 'save');
+      saveMock = vi.fn();
+      user.save = saveMock as any;
     });
 
     it('Creates, saves, and returns a new uuid api key', async () => {
       user.apiKey = 'old';
       expect(await user.getNewApiKey()).to.not.equal('old');
       expect(user.apiKey).to.not.equal('old');
-      assert.calledOnce(saveStub);
+      expect(saveMock).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('generateNewLinkToken', () => {
-    let user: User;
-    let saveStub: SinonStub;
+    let saveMock: MockInstance;
 
     beforeEach(() => {
-      user = new User();
-      saveStub = sandbox.stub(user, 'save');
+      saveMock = vi.fn();
+      user.save = saveMock as any;
     });
 
     it('Creates, saves, and returns a new link token', async () => {
       user.linkToken = 'old';
       expect(await user.generateNewLinkToken('user')).to.not.equal('old');
       expect(user.linkToken.startsWith('user ')).to.be.true;
-      assert.calledOnce(saveStub);
+      expect(saveMock).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('findByDiscordId', () => {
-    let findOneStub: SinonStub;
+    let findOneMock: MockInstance;
 
     beforeEach(() => {
-      findOneStub = sandbox.stub(User, 'findOne');
+      findOneMock = vi.spyOn(User, 'findOne');
     });
 
     it('Returns the results of a find with WHERE condition', async () => {
-      findOneStub.resolves('thing');
+      findOneMock.mockResolvedValue('thing');
       expect(await User.findByDiscordId('test')).to.equal('thing');
-      assert.calledOnceWithExactly(findOneStub, { where: { discordUserId: 'test' } });
+      expect(findOneMock).toBeCalledTimes(1);
+      expect(findOneMock).toBeCalledWith({ where: { discordUserId: 'test' } });
     });
   });
 
   describe('findByTwitchUserId', () => {
-    let findOneStub: SinonStub;
+    let findOneMock: MockInstance;
 
     beforeEach(() => {
-      findOneStub = sandbox.stub(User, 'findOne');
+      findOneMock = vi.spyOn(User, 'findOne');
     });
 
     it('Returns the results of a find with WHERE condition', async () => {
-      findOneStub.resolves('thing');
+      findOneMock.mockResolvedValue('thing');
       expect(await User.findByTwitchUserId('test')).to.equal('thing');
-      assert.calledOnceWithExactly(findOneStub, { where: { twitchUserId: 'test' } });
+      expect(findOneMock).toBeCalledTimes(1);
+      expect(findOneMock).toBeCalledWith({ where: { twitchUserId: 'test' } });
     });
   });
 
   describe('findByLinkToken', () => {
-    let findOneStub: SinonStub;
+    let findOneMock: MockInstance;
 
     beforeEach(() => {
-      findOneStub = sandbox.stub(User, 'findOne');
+      findOneMock = vi.spyOn(User, 'findOne');
     });
 
     it('Returns the results of a find with WHERE condition', async () => {
-      findOneStub.resolves('thing');
+      findOneMock.mockResolvedValue('thing');
       expect(await User.findByLinkToken('test', 'token')).to.equal('thing');
-      assert.calledOnceWithExactly(findOneStub, { where: { linkToken: 'test token' } });
+      expect(findOneMock).toBeCalledTimes(1);
+      expect(findOneMock).toBeCalledWith({ where: { linkToken: 'test token' } });
     });
   });
 });

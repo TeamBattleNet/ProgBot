@@ -1,10 +1,10 @@
-import { TwitchApi } from '../../../clients/twitchApi';
-import { TwitchEventClient } from '../../pubsub/twitchEvents';
-import { TwitchIRCClient, TwitchCommand } from './twitchIRC';
-import { CommonAdminCommand } from '../shared/common';
-import { TwitchChannel } from '../../../models/twitchChannel';
-import { sleep } from '../../../utils';
-import { getLogger } from '../../../logger';
+import { TwitchApi } from '../../../clients/twitchApi.js';
+import { TwitchEventClient } from '../../pubsub/twitchEvents.js';
+import { TwitchIRCClient, TwitchCommand } from './twitchIRC.js';
+import { CommonAdminCommand } from '../shared/common.js';
+import { TwitchChannel } from '../../../models/twitchChannel.js';
+import { sleep } from '../../../utils.js';
+import { getLogger } from '../../../logger.js';
 
 const logger = getLogger('TwitchChannels');
 

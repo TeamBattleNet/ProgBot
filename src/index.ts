@@ -1,16 +1,16 @@
-import 'source-map-support/register';
+import 'source-map-support/register.js';
 import 'reflect-metadata'; // for TypeORM
-import { Database } from './clients/database';
-import { TwitchApi } from './clients/twitchApi';
-import { Chip } from './models/chip';
-import { startWebserver, stopWebserver } from './listeners/webserver/server';
-import { DiscordClient } from './listeners/chat/discord/discordBot';
-import { TwitchIRCClient } from './listeners/chat/twitch/twitchIRC';
-import { TwitchEventClient } from './listeners/pubsub/twitchEvents';
-import { initializeChatBotHandlers } from './listeners/chat';
-import { initializeChannelPointHandlers } from './listeners/pubsub';
-import { scheduleStreamAnnouncer, unscheduleStreamAnnouncer } from './listeners/streamwatcher/streamAnnouncer';
-import { getLogger } from './logger';
+import { Database } from './clients/database.js';
+import { TwitchApi } from './clients/twitchApi.js';
+import { Chip } from './models/chip.js';
+import { startWebserver, stopWebserver } from './listeners/webserver/server.js';
+import { DiscordClient } from './listeners/chat/discord/discordBot.js';
+import { TwitchIRCClient } from './listeners/chat/twitch/twitchIRC.js';
+import { TwitchEventClient } from './listeners/pubsub/twitchEvents.js';
+import { initializeChatBotHandlers } from './listeners/chat/index.js';
+import { initializeChannelPointHandlers } from './listeners/pubsub/index.js';
+import { scheduleStreamAnnouncer, unscheduleStreamAnnouncer } from './listeners/streamwatcher/streamAnnouncer.js';
+import { getLogger } from './logger.js';
 const logger = getLogger('main');
 
 async function main() {

@@ -1,5 +1,5 @@
-import { ChatContext } from './common';
-import type { DiscordMsgOrCmd } from '../discord/discordBot';
+import { ChatContext } from './common.js';
+import type { DiscordMsgOrCmd } from '../discord/discordBot.js';
 
 const EMOTE_MAP: { [emote: string]: { [chatType: string]: string } } = {
   ProgChamp: { discord: '<:ProgChamp:281409807754461184>', twitch: 'ProgChamp' },

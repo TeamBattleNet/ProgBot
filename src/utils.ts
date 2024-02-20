@@ -1,5 +1,5 @@
-import { Config } from './clients/configuration';
-import { StyleType } from './types';
+import { Config } from './clients/configuration.js';
+import { StyleType } from './types.js';
 
 export async function sleep(ms: number) {
   return new Promise((resolve) => {

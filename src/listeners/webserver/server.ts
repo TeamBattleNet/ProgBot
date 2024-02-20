@@ -1,11 +1,11 @@
 import express from 'express';
-import { Config } from '../../clients/configuration';
-import { cors } from './middleware/cors';
-import { notFound } from './middleware/notFound';
-import { errorHandler } from './middleware/errorHandler';
-import { baseRoutes } from './routes/base';
-import { v1Routes } from './routes/v1';
-import { getLogger } from '../../logger';
+import { Config } from '../../clients/configuration.js';
+import { cors } from './middleware/cors.js';
+import { notFound } from './middleware/notFound.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import { baseRoutes } from './routes/base.js';
+import { v1Routes } from './routes/v1.js';
+import { getLogger } from '../../logger.js';
 const logger = getLogger('webserver');
 
 let server: any = undefined;

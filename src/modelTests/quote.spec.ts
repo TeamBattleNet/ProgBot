@@ -1,56 +1,51 @@
-import { SinonSandbox, createSandbox, SinonStub, assert } from 'sinon';
-import { expect } from 'chai';
-import { Quote } from '../models/quote';
+import { describe, it, expect, beforeEach, vi, afterEach, MockInstance } from 'vitest';
+import { Quote } from '../models/quote.js';
 
 describe('Quote', () => {
-  let sandbox: SinonSandbox;
-
-  beforeEach(() => {
-    sandbox = createSandbox();
-  });
-
   afterEach(() => {
-    sandbox.restore();
+    vi.restoreAllMocks();
   });
 
   describe('getRandomQuote', () => {
-    let createQueryBuilderStub: SinonStub;
+    let createQueryBuilderStub: MockInstance;
     let queryStub: any;
 
     beforeEach(() => {
       queryStub = {
-        where: sandbox.stub(),
-        orderBy: sandbox.stub(),
-        limit: sandbox.stub(),
-        getOne: sandbox.stub(),
+        where: vi.fn(),
+        orderBy: vi.fn(),
+        limit: vi.fn(),
+        getOne: vi.fn(),
       };
-      queryStub.where.returns(queryStub);
-      queryStub.orderBy.returns(queryStub);
-      queryStub.limit.returns(queryStub);
-      queryStub.getOne.resolves('result');
-      createQueryBuilderStub = sandbox.stub(Quote, 'createQueryBuilder').returns(queryStub);
+      queryStub.where.mockReturnValue(queryStub);
+      queryStub.orderBy.mockReturnValue(queryStub);
+      queryStub.limit.mockReturnValue(queryStub);
+      queryStub.getOne.mockResolvedValue('result');
+      createQueryBuilderStub = vi.spyOn(Quote, 'createQueryBuilder').mockReturnValue(queryStub);
     });
 
     it('Returns result of getOne call from query', async () => {
       expect(await Quote.getRandomQuote()).to.equal('result');
-      assert.calledOnce(queryStub.getOne);
-      assert.calledOnce(createQueryBuilderStub);
+      expect(queryStub.getOne).toBeCalledTimes(1);
+      expect(createQueryBuilderStub).toBeCalledTimes(1);
     });
 
     it('Orders query by random with limit 1', async () => {
       await Quote.getRandomQuote();
-      assert.calledOnceWithExactly(queryStub.orderBy, 'RANDOM()');
-      assert.calledOnceWithExactly(queryStub.limit, 1);
+      expect(queryStub.orderBy).toBeCalledTimes(1);
+      expect(queryStub.orderBy).toBeCalledWith('RANDOM()');
+      expect(queryStub.limit).toBeCalledTimes(1);
+      expect(queryStub.limit).toBeCalledWith(1);
     });
 
     it('Does not use a WHERE clause when no filter', async () => {
       await Quote.getRandomQuote();
-      assert.notCalled(queryStub.where);
+      expect(queryStub.where).toBeCalledTimes(0);
     });
 
     it('Uses WHERE clause when filter provided', async () => {
       await Quote.getRandomQuote('filter');
-      assert.calledWithExactly(queryStub.where, 'q.quote LIKE :filter OR q.user LIKE :filter', { filter: '%filter%' });
+      expect(queryStub.where).toBeCalledWith('q.quote LIKE :filter OR q.user LIKE :filter', { filter: '%filter%' });
     });
   });
 });

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { asyncHandler } from './helpers';
+import { asyncHandler } from './helpers.js';
 
 /**
  * GET /health

@@ -1,10 +1,10 @@
-import { parseNextWord } from '../shared/utils';
-import { Config } from '../../../clients/configuration';
-import { TwitchApi } from '../../../clients/twitchApi';
-import { TwitchChannel } from '../../../models/twitchChannel';
-import { getLogger } from '../../../logger';
+import { parseNextWord } from '../shared/utils.js';
+import { Config } from '../../../clients/configuration.js';
+import { TwitchApi } from '../../../clients/twitchApi.js';
+import { TwitchChannel } from '../../../models/twitchChannel.js';
+import { getLogger } from '../../../logger.js';
 import { ChatClient, ChatMessage } from '@twurple/chat';
-import type { CommandCategory } from '../../../types';
+import type { CommandCategory } from '../../../types.js';
 
 const logger = getLogger('twitchIRC');
 

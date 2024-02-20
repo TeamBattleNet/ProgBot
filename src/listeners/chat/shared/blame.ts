@@ -1,5 +1,5 @@
-import { CommonAnonymousCommand } from './common';
-import { getEmote, getDiscordUser } from './utils';
+import { CommonAnonymousCommand } from './common.js';
+import { getEmote, getDiscordUser } from './utils.js';
 
 export const blame: CommonAnonymousCommand = {
   cmd: 'blame',

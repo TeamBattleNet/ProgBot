@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { getLogger } from '../../../logger';
+import { getLogger } from '../../../logger.js';
 
 const logger = getLogger('webserver_error_handler');
 

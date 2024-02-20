@@ -1,8 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, Generated, BaseEntity } from 'typeorm';
-import { Database } from '../clients/database';
+import { Database } from '../clients/database.js';
 import { v4 as uuidv4 } from 'uuid';
-import { getRandomStyle } from '../utils';
-import { StyleType } from '../types';
+import { getRandomStyle } from '../utils.js';
+import type { StyleType } from '../types.js';
 
 const isUUID = /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i;
 

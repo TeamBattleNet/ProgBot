@@ -1,6 +1,6 @@
-import { readFileSync, promises as fspromise } from 'fs';
+import { readFileSync, promises as fspromise } from 'node:fs';
 import type { AccessToken } from '@twurple/auth';
-import { ConfigFile } from '../types';
+import { ConfigFile } from '../types.js';
 
 const CONFIG_FILE_PATH = 'runtime/config.json';
 

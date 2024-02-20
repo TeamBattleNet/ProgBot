@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import { Entity, PrimaryColumn, Column, BaseEntity, QueryRunner } from 'typeorm';
-import type { ChipElement, ChipCategory } from '../types';
+import type { ChipElement, ChipCategory } from '../types.js';
 
 const DEFAULT_CHIPS_CSV = 'chips/chips.csv';
 

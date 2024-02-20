@@ -1,8 +1,8 @@
-import { DiscordClient } from '../chat/discord/discordBot';
-import { AnnounceChannel } from '../../models/announceChannel';
-import { TwitchApi, TwitchStream } from '../../clients/twitchApi';
-import { timeoutPromise } from '../../utils';
-import { getLogger } from '../../logger';
+import { DiscordClient } from '../chat/discord/discordBot.js';
+import { AnnounceChannel } from '../../models/announceChannel.js';
+import { TwitchApi, TwitchStream } from '../../clients/twitchApi.js';
+import { timeoutPromise } from '../../utils.js';
+import { getLogger } from '../../logger.js';
 const logger = getLogger('StreamAnnouncer');
 
 const ANNOUNCE_CHECK_PERIOD_MS = 15000;

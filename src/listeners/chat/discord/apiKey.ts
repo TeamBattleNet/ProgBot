@@ -1,6 +1,6 @@
-import { DiscordCommand } from './discordBot';
-import { getDiscordUser } from '../shared/utils';
-import { User } from '../../../models/user';
+import { DiscordCommand } from './discordBot.js';
+import { getDiscordUser } from '../shared/utils.js';
+import { User } from '../../../models/user.js';
 
 export const generateApiKey: DiscordCommand = {
   cmd: 'generateapikey',

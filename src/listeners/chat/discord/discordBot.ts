@@ -1,8 +1,8 @@
 import discord from 'discord.js';
-import { parseNextWord } from '../shared/utils';
-import { Config } from '../../../clients/configuration';
-import { getLogger } from '../../../logger';
-import type { CommandCategory } from '../../../types';
+import { parseNextWord } from '../shared/utils.js';
+import { Config } from '../../../clients/configuration.js';
+import { getLogger } from '../../../logger.js';
+import type { CommandCategory } from '../../../types.js';
 
 const logger = getLogger('discord');
 

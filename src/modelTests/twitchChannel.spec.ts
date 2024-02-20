@@ -1,23 +1,18 @@
-import { SinonSandbox, createSandbox, SinonStub, assert } from 'sinon';
-import { expect } from 'chai';
-import { TwitchChannel } from '../models/twitchChannel';
+import { describe, it, expect, beforeEach, vi, afterEach, MockInstance } from 'vitest';
+import { TwitchChannel } from '../models/twitchChannel.js';
 
 describe('TwitchChannel', () => {
-  let sandbox: SinonSandbox;
+  let chan: TwitchChannel;
 
   beforeEach(() => {
-    sandbox = createSandbox();
+    chan = new TwitchChannel();
   });
 
   afterEach(() => {
-    sandbox.restore();
+    vi.restoreAllMocks();
   });
 
   describe('isDisabledCommand', () => {
-    let chan: TwitchChannel;
-
-    beforeEach(() => (chan = new TwitchChannel()));
-
     it('Returns true if command is disabled', () => {
       chan.disabledCommands = new Set(['disabled']);
       expect(chan.isDisabledCommand('disabled')).to.be.true;
@@ -30,10 +25,6 @@ describe('TwitchChannel', () => {
   });
 
   describe('canBrowse', () => {
-    let chan: TwitchChannel;
-
-    beforeEach(() => (chan = new TwitchChannel()));
-
     it('Returns true if now - lastBrowseTime is above minimum channel browse seconds', () => {
       chan.minimumBrowseSeconds = 10;
       const old = new Date();
@@ -48,122 +39,119 @@ describe('TwitchChannel', () => {
   });
 
   describe('addDisabledCommands', () => {
-    let chan: TwitchChannel;
-    let saveStub: SinonStub;
+    let saveMock: MockInstance;
 
     beforeEach(() => {
-      chan = new TwitchChannel();
       chan.disabledCommands = new Set();
-      saveStub = sandbox.stub(chan, 'save');
+      saveMock = vi.fn();
+      chan.save = saveMock as any;
     });
 
     it('Adds new disabled command and saves if new disabled command is provided', async () => {
       await chan.addDisabledCommands(['disabled1', 'disabled2']);
       expect(chan.disabledCommands.has('disabled1'));
       expect(chan.disabledCommands.has('disabled2'));
-      assert.calledOnce(saveStub);
+      expect(saveMock).toHaveBeenCalledTimes(1);
     });
 
     it('Does not save if duplicate disabled command is provided', async () => {
       chan.disabledCommands.add('disabled');
       await chan.addDisabledCommands(['disabled']);
-      assert.notCalled(saveStub);
+      expect(saveMock).toHaveBeenCalledTimes(0);
     });
 
     it('Throws an error if a comma is provided in a command to disable', async () => {
-      try {
+      expect(async () => {
         await chan.addDisabledCommands(['disabled', 'bad,cmd']);
-        expect.fail('Did not throw');
-      } catch (e) {} // eslint-disable-line no-empty
+      }).rejects.toThrowError();
     });
   });
 
   describe('removeDisabledCommands', () => {
-    let chan: TwitchChannel;
-    let saveStub: SinonStub;
+    let saveMock: MockInstance;
 
     beforeEach(() => {
-      chan = new TwitchChannel();
       chan.disabledCommands = new Set();
-      saveStub = sandbox.stub(chan, 'save');
+      saveMock = vi.fn();
+      chan.save = saveMock as any;
     });
 
     it('Removes disabled command and saves if existing disabled command is provided', async () => {
       chan.disabledCommands.add('disabled');
       await chan.removeDisabledCommands(['disabled']);
       expect(chan.disabledCommands.has('disabled')).to.be.false;
-      assert.calledOnce(saveStub);
+      expect(saveMock).toHaveBeenCalledTimes(1);
     });
 
     it('Does not save if non-disabled command is provided', async () => {
       await chan.removeDisabledCommands(['disabled']);
-      assert.notCalled(saveStub);
+      expect(saveMock).toHaveBeenCalledTimes(0);
     });
   });
 
   describe('setMinBrowseSeconds', () => {
-    let chan: TwitchChannel;
-    let saveStub: SinonStub;
+    let saveMock: MockInstance;
 
     beforeEach(() => {
-      chan = new TwitchChannel();
-      saveStub = sandbox.stub(chan, 'save');
+      saveMock = vi.fn();
+      chan.save = saveMock as any;
     });
 
     it('Saves provided minimum browse seconds', async () => {
       await chan.setMinBrowseSeconds(10);
       expect(chan.minimumBrowseSeconds).to.equal(10);
-      assert.calledOnce(saveStub);
+      expect(saveMock).toHaveBeenCalledTimes(1);
     });
 
     it('Does not allow minimum browse seconds to be below 0', async () => {
       await chan.setMinBrowseSeconds(-1);
       expect(chan.minimumBrowseSeconds).to.equal(0);
-      assert.calledOnce(saveStub);
+      expect(saveMock).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('getAllChannels', () => {
-    let findStub: SinonStub;
+    let findMock: MockInstance;
 
     beforeEach(() => {
-      findStub = sandbox.stub(TwitchChannel, 'find');
+      findMock = vi.spyOn(TwitchChannel, 'find');
     });
 
     it('Returns the results of a generic find', async () => {
-      findStub.resolves('thing');
+      findMock.mockResolvedValue('thing');
       expect(await TwitchChannel.getAllChannels()).to.equal('thing');
-      assert.calledOnceWithExactly(findStub);
+      expect(findMock).toHaveBeenCalledTimes(1);
+      expect(findMock).toHaveBeenCalledWith();
     });
   });
 
   describe('getChannel', () => {
-    let findOneStub: SinonStub;
+    let findOneMock: MockInstance;
 
     beforeEach(() => {
-      findOneStub = sandbox.stub(TwitchChannel, 'findOne');
+      findOneMock = vi.spyOn(TwitchChannel, 'findOne');
     });
 
     it('Returns the results of a find with WHERE condition', async () => {
-      findOneStub.resolves('thing');
+      findOneMock.mockResolvedValue('thing');
       expect(await TwitchChannel.getChannel('SoMeThInG')).to.equal('thing');
-      assert.calledOnceWithExactly(findOneStub, { where: { channel: 'something' } });
+      expect(findOneMock).toHaveBeenCalledTimes(1);
+      expect(findOneMock).toHaveBeenCalledWith({ where: { channel: 'something' } });
     });
   });
 
   describe('createNewChannel', () => {
-    let findOneStub: SinonStub;
+    let findOneMock: MockInstance;
 
     beforeEach(() => {
-      findOneStub = sandbox.stub(TwitchChannel, 'findOne');
+      findOneMock = vi.spyOn(TwitchChannel, 'findOne');
     });
 
     it('Throws an error if the channel already exists', async () => {
-      findOneStub.resolves('thing');
-      try {
+      findOneMock.mockResolvedValue('thing');
+      expect(async () => {
         await TwitchChannel.createNewChannel('exists');
-        expect.fail('Did not throw');
-      } catch (e) {} // eslint-disable-line no-empty
+      }).rejects.toThrowError();
     });
   });
 });

@@ -1,7 +1,7 @@
-import { DiscordCommand, DiscordMsgOrCmd } from './discordBot';
-import { getDiscordUser, getDiscordChannelId } from '../shared/utils';
-import { AnnounceChannel } from '../../../models/announceChannel';
-import { User } from '../../../models/user';
+import { DiscordCommand, DiscordMsgOrCmd } from './discordBot.js';
+import { getDiscordUser, getDiscordChannelId } from '../shared/utils.js';
+import { AnnounceChannel } from '../../../models/announceChannel.js';
+import { User } from '../../../models/user.js';
 
 async function makeAnnounceChannelHandler(msg: DiscordMsgOrCmd, speedrunOnly: boolean) {
   const authorId = getDiscordUser(msg).id;

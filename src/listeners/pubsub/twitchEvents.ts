@@ -1,5 +1,5 @@
-import { TwitchChannel } from '../../models/twitchChannel';
-import { getLogger } from '../../logger';
+import { TwitchChannel } from '../../models/twitchChannel.js';
+import { getLogger } from '../../logger.js';
 import { PubSubClient, PubSubHandler, PubSubRedemptionMessage } from '@twurple/pubsub';
 
 const logger = getLogger('twitchPubSub');

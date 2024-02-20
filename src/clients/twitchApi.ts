@@ -1,6 +1,6 @@
 import got from 'got';
-import { Config } from './configuration';
-import { getLogger } from '../logger';
+import { Config } from './configuration.js';
+import { getLogger } from '../logger.js';
 import { ApiClient, HelixStream } from '@twurple/api';
 import { RefreshingAuthProvider } from '@twurple/auth';
 
@@ -20,7 +20,7 @@ export interface TwitchStream {
 export class TwitchApi {
   public static got = got.extend({
     throwHttpErrors: false,
-    timeout: 30000,
+    timeout: { request: 30000 },
   });
   public static AuthProvider = new RefreshingAuthProvider({
     clientId: Config.getConfig().twitch_app_client_id,

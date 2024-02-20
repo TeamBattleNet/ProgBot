@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { getRedirectURI } from '../../../utils';
-import { TwitchApi } from '../../../clients/twitchApi';
-import { TwitchChannel } from '../../../models/twitchChannel';
-import { ProgbotError } from '../../../errors';
-import { asyncHandler } from './helpers';
-import { getLogger } from '../../../logger';
+import { getRedirectURI } from '../../../utils.js';
+import { TwitchApi } from '../../../clients/twitchApi.js';
+import { TwitchChannel } from '../../../models/twitchChannel.js';
+import { ProgbotError } from '../../../errors.js';
+import { asyncHandler } from './helpers.js';
+import { getLogger } from '../../../logger.js';
 
 const logger = getLogger('webserver_twitch');
 

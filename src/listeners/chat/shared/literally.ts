@@ -1,6 +1,6 @@
-import { CommonAnonymousCommand, CommonAdminCommand } from './common';
-import { parseNextWord } from './utils';
-import { Literally } from '../../../models/literally';
+import { CommonAnonymousCommand, CommonAdminCommand } from './common.js';
+import { parseNextWord } from './utils.js';
+import { Literally } from '../../../models/literally.js';
 
 export const literally: CommonAnonymousCommand = {
   cmd: 'literally',

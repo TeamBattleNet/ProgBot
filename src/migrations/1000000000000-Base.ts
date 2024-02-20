@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { MigrationInterface, QueryRunner } from 'typeorm';
-import { Chip } from '../models/chip';
+import { Chip } from '../models/chip.js';
 
 export class Base1000000000000 implements MigrationInterface {
   name = 'Base1000000000000';

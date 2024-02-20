@@ -1,7 +1,7 @@
-import { registerCommonAnonymousCommand, registerCommonRegisteredCommand, registerCommonAdminCommand } from './shared/common';
-import * as accountLink from './shared/accountLink';
-import { DiscordClient } from './discord/discordBot';
-import { TwitchIRCClient } from './twitch/twitchIRC';
+import { registerCommonAnonymousCommand, registerCommonRegisteredCommand, registerCommonAdminCommand } from './shared/common.js';
+import * as accountLink from './shared/accountLink.js';
+import { DiscordClient } from './discord/discordBot.js';
+import { TwitchIRCClient } from './twitch/twitchIRC.js';
 import {
   enableCmdOnChannel,
   disableCmdOnChannel,
@@ -15,20 +15,20 @@ import {
   addChannelPointsIntegration,
   removeChannelPointsIntegration,
   listChannelPointsIntegrations,
-} from './twitch/twitchChannel';
-import { registerDiscord } from './discord/register';
-import { generateApiKey } from './discord/apiKey';
-import { makeAnnounceChannel, makeSpeedrunAnnounceChannel, removeAnnounceChannel } from './discord/liveAnnounce';
-import { addTwitchStreamLiveChannel, removeTwitchStreamLiveChannel, listTwitchStreamLiveChannel } from './shared/liveChannel';
-import { streams } from './shared/streams';
-import { registerTwitch } from './twitch/register';
-import { shutdownCmd } from './shared/shutdown';
-import { ping } from './shared/ping';
-import { getAllSimpleCommands, addSimpleCommand, removeSimpleCommand, listSimpleCommands } from './shared/simpleCommand';
-import { quote, addQuote } from './shared/quote';
-import { literally, addLiterally } from './shared/literally';
-import { blame } from './shared/blame';
-import { stylin } from './shared/style';
+} from './twitch/twitchChannel.js';
+import { registerDiscord } from './discord/register.js';
+import { generateApiKey } from './discord/apiKey.js';
+import { makeAnnounceChannel, makeSpeedrunAnnounceChannel, removeAnnounceChannel } from './discord/liveAnnounce.js';
+import { addTwitchStreamLiveChannel, removeTwitchStreamLiveChannel, listTwitchStreamLiveChannel } from './shared/liveChannel.js';
+import { streams } from './shared/streams.js';
+import { registerTwitch } from './twitch/register.js';
+import { shutdownCmd } from './shared/shutdown.js';
+import { ping } from './shared/ping.js';
+import { getAllSimpleCommands, addSimpleCommand, removeSimpleCommand, listSimpleCommands } from './shared/simpleCommand.js';
+import { quote, addQuote } from './shared/quote.js';
+import { literally, addLiterally } from './shared/literally.js';
+import { blame } from './shared/blame.js';
+import { stylin } from './shared/style.js';
 
 export async function initializeChatBotHandlers() {
   // Help

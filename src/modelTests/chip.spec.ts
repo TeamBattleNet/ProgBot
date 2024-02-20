@@ -1,27 +1,27 @@
-import { SinonSandbox, createSandbox, SinonStub, assert } from 'sinon';
-import { expect } from 'chai';
-import { Chip } from '../models/chip';
-import mock from 'mock-fs';
+import { describe, it, expect, beforeEach, vi, afterEach, MockInstance } from 'vitest';
+import { type fs, vol } from 'memfs';
+import { Chip } from '../models/chip.js';
+
+vi.mock('node:fs', async () => {
+  const memfs: { fs: typeof fs } = await vi.importActual('memfs');
+  return {
+    promises: memfs.fs.promises,
+  };
+});
 
 describe('Chip', () => {
-  let sandbox: SinonSandbox;
-
-  beforeEach(() => {
-    sandbox = createSandbox();
-  });
-
   afterEach(() => {
-    sandbox.restore();
+    vol.reset();
+    vi.restoreAllMocks();
+    Chip.chipCache = {};
   });
 
   describe('loadCache', () => {
-    let findStub: SinonStub;
+    let findMock: MockInstance;
 
     beforeEach(() => {
-      findStub = sandbox.stub(Chip, 'find').resolves([]);
+      findMock = vi.spyOn(Chip, 'find').mockResolvedValue([]);
     });
-
-    afterEach(() => (Chip.chipCache = {}));
 
     it('Clears the existing cache', async () => {
       Chip.chipCache['123'] = new Chip();
@@ -32,16 +32,14 @@ describe('Chip', () => {
     it('Fills the cache with found chips', async () => {
       const myChip = new Chip();
       myChip.id = 123;
-      findStub.resolves([myChip]);
+      findMock.mockResolvedValue([myChip]);
       await Chip.loadCache();
-      assert.calledOnce(findStub);
+      expect(findMock).toHaveBeenCalledTimes(1);
       expect(Chip.chipCache[123]).to.equal(myChip);
     });
   });
 
   describe('getById', () => {
-    afterEach(() => (Chip.chipCache = {}));
-
     it('Returns chip from cache if it exists', () => {
       const myChip = new Chip();
       Chip.chipCache['123'] = myChip;
@@ -59,26 +57,22 @@ describe('Chip', () => {
 
   describe('csvChipDBImport', () => {
     let queryRunnerStub: any;
-    let saveStub: SinonStub;
+    let saveStub: MockInstance;
 
     beforeEach(() => {
-      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,2,3,aqua' });
-      saveStub = sandbox.stub();
+      vol.fromJSON({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,2,3,aqua' });
+      saveStub = vi.fn();
       queryRunnerStub = {
         connection: {
-          createEntityManager: sandbox.stub().returns({ save: saveStub }),
+          createEntityManager: () => ({ save: saveStub }),
         },
       };
     });
 
-    afterEach(() => {
-      mock.restore();
-    });
-
     it('reads from csv and saves parsed chip entities', async () => {
       await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
-      assert.calledOnce(saveStub);
-      const firstParsedChip = saveStub.getCall(0).args[0][0];
+      expect(saveStub).toHaveBeenCalledTimes(1);
+      const firstParsedChip = saveStub.mock.calls[0][0][0] as Chip;
       expect(firstParsedChip.id).to.equal(1);
       expect(firstParsedChip.name).to.equal('name');
       expect(firstParsedChip.category).to.equal('std');
@@ -88,43 +82,38 @@ describe('Chip', () => {
     });
 
     it('skips blank lines in csv gracefully', async () => {
-      mock({ fakeCSVFile: '\n\nid,name,category,rarity,damage,element\n\n\n1,name,std,2,3,aqua\n\n' });
+      vol.fromJSON({ fakeCSVFile: '\n\nid,name,category,rarity,damage,element\n\n\n1,name,std,2,3,aqua\n\n' });
       await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
-      assert.calledOnce(saveStub);
+      expect(saveStub).toHaveBeenCalledTimes(1);
     });
 
     it('rejects malformed csv when missing an item column', async () => {
-      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,2,3' });
-      try {
+      vol.fromJSON({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,2,3' });
+      expect(async () => {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
-        expect.fail('Did not throw');
-      } catch (e) {} // eslint-disable-line no-empty
+      }).rejects.toThrowError();
     });
 
     it('rejects malformed csv when extra item column', async () => {
-      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,2,3,aqua,extradata' });
-      try {
+      vol.fromJSON({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,2,3,aqua,extradata' });
+      expect(async () => {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
-        expect.fail('Did not throw');
-      } catch (e) {} // eslint-disable-line no-empty
+      }).rejects.toThrowError();
     });
 
     it('rejects malformed csv when number column does not parse correctly', async () => {
-      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\nnotNumber,name,std,2,3,aqua' });
-      try {
+      vol.fromJSON({ fakeCSVFile: 'id,name,category,rarity,damage,element\nnotNumber,name,std,2,3,aqua' });
+      expect(async () => {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
-        expect.fail('Did not throw');
-      } catch (e) {} // eslint-disable-line no-empty
-      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,notNumber,3,aqua' });
-      try {
+      }).rejects.toThrowError();
+      vol.fromJSON({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,notNumber,3,aqua' });
+      expect(async () => {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
-        expect.fail('Did not throw');
-      } catch (e) {} // eslint-disable-line no-empty
-      mock({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,2,notNumber,aqua' });
-      try {
+      }).rejects.toThrowError();
+      vol.fromJSON({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,2,notNumber,aqua' });
+      expect(async () => {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
-        expect.fail('Did not throw');
-      } catch (e) {} // eslint-disable-line no-empty
+      }).rejects.toThrowError();
     });
   });
 });

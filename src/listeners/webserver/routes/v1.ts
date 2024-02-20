@@ -1,5 +1,5 @@
 import express from 'express';
-import * as twitch from '../controllers/twitchController';
+import * as twitch from '../controllers/twitchController.js';
 
 export function v1Routes(app: express.Application) {
   const v1Router = express.Router();

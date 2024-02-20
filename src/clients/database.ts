@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { Config } from './configuration';
+import { Config } from './configuration.js';
 
 const DatabaseDataSource = new DataSource({
   type: 'better-sqlite3',

@@ -1,6 +1,6 @@
-import { TwitchApi } from '../../../clients/twitchApi';
-import { CommonAdminCommand } from './common';
-import { AnnounceChannel } from '../../../models/announceChannel';
+import { TwitchApi } from '../../../clients/twitchApi.js';
+import { CommonAdminCommand } from './common.js';
+import { AnnounceChannel } from '../../../models/announceChannel.js';
 
 export const addTwitchStreamLiveChannel: CommonAdminCommand = {
   cmd: 'addtwitchstreamlivechannel',

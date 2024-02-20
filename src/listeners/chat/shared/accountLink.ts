@@ -1,7 +1,7 @@
-import { TwitchIRCClient } from '../twitch/twitchIRC';
-import { CommonRegisteredCommand } from './common';
-import { getDiscordUser } from './utils';
-import { User } from '../../../models/user';
+import { TwitchIRCClient } from '../twitch/twitchIRC.js';
+import { CommonRegisteredCommand } from './common.js';
+import { getDiscordUser } from './utils.js';
+import { User } from '../../../models/user.js';
 
 const discordUsernameCheckRegex = /^.+?#\d{4}$/;
 

@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
     "emitDecoratorMetadata": true,
-    "target": "es2020",
+    "target": "es2022",
     "outDir": "./dist/",
     "rootDir": "./src/",
-    "moduleResolution": "node",
-    "module": "commonjs",
+    "moduleResolution": "node16",
+    "module": "node16",
     "declaration": false,
     "esModuleInterop": true,
     "importHelpers": true,
@@ -28,8 +28,7 @@
       "./node_modules/@types"
     ],
     "types": [
-      "node",
-      "mocha"
+      "node"
     ],
     "baseUrl": "."
   },
@@ -37,7 +36,8 @@
     "**/*.ts"
   ],
   "exclude": [
-    "node_modules/**"
+    "node_modules/**",
+    "vitest.config.ts"
   ],
   "compileOnSave": false
 }

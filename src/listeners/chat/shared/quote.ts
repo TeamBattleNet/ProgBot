@@ -1,6 +1,6 @@
-import { CommonAnonymousCommand, CommonAdminCommand } from './common';
-import { parseNextWord, wrap } from './utils';
-import { Quote } from '../../../models/quote';
+import { CommonAnonymousCommand, CommonAdminCommand } from './common.js';
+import { parseNextWord, wrap } from './utils.js';
+import { Quote } from '../../../models/quote.js';
 
 const optionalDateRegex = /^\[(.*)\](.*)/;
 

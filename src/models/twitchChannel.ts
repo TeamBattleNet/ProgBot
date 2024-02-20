@@ -1,7 +1,7 @@
 import { Entity, PrimaryColumn, Column, BaseEntity } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
-import { Config } from '../clients/configuration';
-import { getRedirectURI } from '../utils';
+import { Config } from '../clients/configuration.js';
+import { getRedirectURI } from '../utils.js';
 import { RefreshingAuthProvider, AccessToken, getTokenInfo } from '@twurple/auth';
 
 @Entity()

@@ -1,4 +1,4 @@
-import * as log from 'loglevel';
+import log from 'loglevel';
 import prefix from 'loglevel-plugin-prefix';
 import chalk from 'chalk';
 

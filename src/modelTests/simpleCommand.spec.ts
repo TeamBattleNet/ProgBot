@@ -1,43 +1,38 @@
-import { SinonSandbox, createSandbox, SinonStub, assert } from 'sinon';
-import { expect } from 'chai';
-import { SimpleCommand } from '../models/simpleCommand';
+import { describe, it, expect, beforeEach, vi, afterEach, MockInstance } from 'vitest';
+import { SimpleCommand } from '../models/simpleCommand.js';
 
 describe('SimpleCommand', () => {
-  let sandbox: SinonSandbox;
-
-  beforeEach(() => {
-    sandbox = createSandbox();
-  });
-
   afterEach(() => {
-    sandbox.restore();
+    vi.restoreAllMocks();
   });
 
   describe('getAllCommands', () => {
-    let findStub: SinonStub;
+    let findMock: MockInstance;
 
     beforeEach(() => {
-      findStub = sandbox.stub(SimpleCommand, 'find');
+      findMock = vi.spyOn(SimpleCommand, 'find');
     });
 
     it('Returns the results of a generic find', async () => {
-      findStub.resolves('thing');
+      findMock.mockResolvedValue('thing');
       expect(await SimpleCommand.getAllCommands()).to.equal('thing');
-      assert.calledOnceWithExactly(findStub);
+      expect(findMock).toBeCalledTimes(1);
+      expect(findMock).toBeCalledWith();
     });
   });
 
   describe('getByCmd', () => {
-    let findOneStub: SinonStub;
+    let findOneMock: MockInstance;
 
     beforeEach(() => {
-      findOneStub = sandbox.stub(SimpleCommand, 'findOne');
+      findOneMock = vi.spyOn(SimpleCommand, 'findOne');
     });
 
     it('Returns the results of a find with WHERE condition', async () => {
-      findOneStub.resolves('thing');
+      findOneMock.mockResolvedValue('thing');
       expect(await SimpleCommand.getByCmd('Test')).to.equal('thing');
-      assert.calledOnceWithExactly(findOneStub, { where: { cmd: 'Test' } });
+      expect(findOneMock).toBeCalledTimes(1);
+      expect(findOneMock).toBeCalledWith({ where: { cmd: 'Test' } });
     });
   });
 });

@@ -1,4 +1,4 @@
-import { CommonRegisteredCommand } from './common';
+import { CommonRegisteredCommand } from './common.js';
 
 export const stylin: CommonRegisteredCommand = {
   cmd: 'stylin',

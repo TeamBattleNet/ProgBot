@@ -1,8 +1,8 @@
-import { DiscordClient, MsgHandler as DiscordMessageHandler, DiscordMsgOrCmd } from '../discord/discordBot';
-import { TwitchIRCClient, MsgHandler as TwitchMessageHandler } from '../twitch/twitchIRC';
-import { User } from '../../../models/user';
-import { getDiscordUser } from './utils';
-import type { CommandCategory } from '../../../types';
+import { DiscordClient, MsgHandler as DiscordMessageHandler, DiscordMsgOrCmd } from '../discord/discordBot.js';
+import { TwitchIRCClient, MsgHandler as TwitchMessageHandler } from '../twitch/twitchIRC.js';
+import { User } from '../../../models/user.js';
+import { getDiscordUser } from './utils.js';
+import type { CommandCategory } from '../../../types.js';
 import type { ChatMessage as TwitchMessage } from '@twurple/chat';
 
 // If chat type is twitch, twitchMsg will be defined

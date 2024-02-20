@@ -1,4 +1,4 @@
-import { CommonAnonymousCommand } from './common';
+import { CommonAnonymousCommand } from './common.js';
 
 export const ping: CommonAnonymousCommand = {
   cmd: 'ping',

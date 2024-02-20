@@ -1,76 +1,73 @@
-import { SinonSandbox, createSandbox, SinonStub, assert } from 'sinon';
-import { expect } from 'chai';
-import { Literally } from '../models/literally';
+import { describe, it, expect, beforeEach, vi, afterEach, MockInstance } from 'vitest';
+import { Literally } from '../models/literally.js';
 
 describe('Literally', () => {
-  let sandbox: SinonSandbox;
-
-  beforeEach(() => {
-    sandbox = createSandbox();
-  });
-
   afterEach(() => {
-    sandbox.restore();
+    vi.restoreAllMocks();
   });
 
   describe('getRandomLiterally', () => {
-    let createQueryBuilderStub: SinonStub;
+    let createQueryBuilderStub: MockInstance;
     let queryStub: any;
 
     beforeEach(() => {
       queryStub = {
-        where: sandbox.stub(),
-        orderBy: sandbox.stub(),
-        limit: sandbox.stub(),
-        getOne: sandbox.stub(),
+        where: vi.fn(),
+        orderBy: vi.fn(),
+        limit: vi.fn(),
+        getOne: vi.fn(),
       };
-      queryStub.where.returns(queryStub);
-      queryStub.orderBy.returns(queryStub);
-      queryStub.limit.returns(queryStub);
-      queryStub.getOne.resolves('result');
-      createQueryBuilderStub = sandbox.stub(Literally, 'createQueryBuilder').returns(queryStub);
+      queryStub.where.mockReturnValue(queryStub);
+      queryStub.orderBy.mockReturnValue(queryStub);
+      queryStub.limit.mockReturnValue(queryStub);
+      queryStub.getOne.mockResolvedValue('result');
+      createQueryBuilderStub = vi.spyOn(Literally, 'createQueryBuilder').mockReturnValue(queryStub);
     });
 
     it('Returns result of getOne call from query', async () => {
       expect(await Literally.getRandomLiterally()).to.equal('result');
-      assert.calledOnce(queryStub.getOne);
-      assert.calledOnce(createQueryBuilderStub);
+      expect(queryStub.getOne).toBeCalledTimes(1);
+      expect(createQueryBuilderStub).toBeCalledTimes(1);
     });
 
     it('Orders query by random with limit 1', async () => {
       await Literally.getRandomLiterally();
-      assert.calledOnceWithExactly(queryStub.orderBy, 'RANDOM()');
-      assert.calledOnceWithExactly(queryStub.limit, 1);
+      expect(queryStub.orderBy).toBeCalledTimes(1);
+      expect(queryStub.orderBy).toHaveBeenCalledWith('RANDOM()');
+      expect(queryStub.limit).toBeCalledTimes(1);
+      expect(queryStub.limit).toHaveBeenCalledWith(1);
     });
 
     it('Does not use a WHERE clause when no filter', async () => {
       await Literally.getRandomLiterally();
-      assert.notCalled(queryStub.where);
+      expect(queryStub.where).toHaveBeenCalledTimes(0);
     });
 
     it('Uses WHERE clause when filter provided', async () => {
       await Literally.getRandomLiterally('filter');
-      assert.calledWithExactly(queryStub.where, 'q.what LIKE :filter', { filter: '%filter%' });
+      expect(queryStub.where).toHaveBeenCalledWith('q.what LIKE :filter', { filter: '%filter%' });
     });
   });
 
   describe('isDuplicate', () => {
-    let findOneStub: SinonStub;
+    let findOneMock: MockInstance;
 
     beforeEach(() => {
-      findOneStub = sandbox.stub(Literally, 'findOne');
+      findOneMock = vi.spyOn(Literally, 'findOne');
     });
 
     it('Returns true if query with WHERE condition finds something', async () => {
-      findOneStub.resolves('exists');
+      findOneMock.mockResolvedValue('exists');
       expect(await Literally.isDuplicate('what', 'clip')).to.be.true;
-      assert.calledOnceWithExactly(findOneStub, { where: { what: 'what', clip: 'clip' } });
+      expect(findOneMock).toHaveBeenCalledTimes(1);
+      expect(findOneMock).toHaveBeenCalledWith({ where: { what: 'what', clip: 'clip' } });
     });
 
     it('Returns false if query with WHERE condition does not find anything', async () => {
-      findOneStub.resolves(undefined);
+      findOneMock.mockResolvedValue(undefined);
       expect(await Literally.isDuplicate('what', 'clip')).to.be.false;
-      assert.calledOnceWithExactly(findOneStub, { where: { what: 'what', clip: 'clip' } });
+      expect(findOneMock).toHaveBeenCalledTimes(1);
+      expect(findOneMock).toHaveBeenCalledWith({ where: { what: 'what', clip: 'clip' } });
     });
   });
 });

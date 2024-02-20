@@ -1,5 +1,5 @@
-import { CommonAdminCommand } from './common';
-import { shutdown } from '../../../index';
+import { CommonAdminCommand } from './common.js';
+import { shutdown } from '../../../index.js';
 
 export const shutdownCmd: CommonAdminCommand = {
   cmd: 'shutdown',
