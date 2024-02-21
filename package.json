@@ -19,9 +19,9 @@
     "format": "prettier --write '{src/**/*.ts,vitest.config.ts}'",
     "test": "vitest run --coverage",
     "test:docker": "docker build . -f test.Dockerfile -t progbot-testing-container && docker run -it progbot-testing-container",
-    "typeorm:cli": "ts-node ./node_modules/typeorm/cli",
-    "migration:run": "yarn build && yarn typeorm:cli migration:run -d dist/clients/database",
-    "migration:generate": "yarn typeorm:cli migration:generate -d dist/clients/database",
+    "typeorm:cli": "node ./node_modules/typeorm/cli",
+    "migration:run": "yarn build && yarn typeorm:cli migration:run -d dist/clients/database.js",
+    "migration:generate": "yarn typeorm:cli migration:generate -d dist/clients/database.js",
     "clean": "rm -rf dist/ coverage/"
   },
   "dependencies": {
