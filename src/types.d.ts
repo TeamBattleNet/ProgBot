@@ -100,4 +100,10 @@ export type StyleType =
   | 'Tomahawk Beast'
   | 'Tengu Beast'
   | 'Ground Beast'
-  | 'Dust Beast';
+  | 'Dust Beast'
+  | 'Thunder Arm'
+  | 'Aqua Arm'
+  | 'Tomahawk Arm'
+  | 'Search Arm'
+  | 'Proto Arm'
+  | 'Flame Arm';

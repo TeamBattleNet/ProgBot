@@ -94,6 +94,12 @@ const styles: StyleType[] = [
   'Tengu Beast',
   'Ground Beast',
   'Dust Beast',
+  'Thunder Arm',
+  'Aqua Arm',
+  'Tomahawk Arm',
+  'Search Arm',
+  'Proto Arm',
+  'Flame Arm',
 ];
 export function getRandomStyle(): StyleType {
   return styles[Math.floor(Math.random() * styles.length)];
