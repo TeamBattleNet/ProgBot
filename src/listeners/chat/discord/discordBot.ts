@@ -1,4 +1,16 @@
-import discord from 'discord.js';
+import {
+  Client,
+  Message,
+  Partials,
+  GatewayIntentBits,
+  ChatInputCommandInteraction,
+  ApplicationCommandData,
+  ApplicationCommandOptionType,
+  OAuth2Scopes,
+  ActivityType,
+  Interaction,
+  PermissionsBitField,
+} from 'discord.js';
 import { parseNextWord } from '../shared/utils.js';
 import { Config } from '../../../clients/configuration.js';
 import { getLogger } from '../../../logger.js';
@@ -7,15 +19,15 @@ import type { CommandCategory } from '../../../types.js';
 const logger = getLogger('discord');
 
 // TODO re-add discord/erlpack as dependency once it's working again: https://github.com/discord/erlpack/pull/41
-const singletonClient = new discord.Client({
-  partials: [discord.Partials.Channel], // required for DMs: https://discordjs.guide/additional-info/changes-in-v13.html#dm-channels
-  intents: [discord.GatewayIntentBits.Guilds, discord.GatewayIntentBits.GuildMessages, discord.GatewayIntentBits.DirectMessages, discord.GatewayIntentBits.MessageContent],
+const singletonClient = new Client({
+  partials: [Partials.Channel], // required for DMs: https://discordjs.guide/additional-info/changes-in-v13.html#dm-channels
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent],
 });
 
 export class DiscordMsgOrCmd {
-  public msg?: discord.Message;
-  public cmd?: discord.ChatInputCommandInteraction;
-  public constructor(msg?: discord.Message, cmd?: discord.ChatInputCommandInteraction) {
+  public msg?: Message;
+  public cmd?: ChatInputCommandInteraction;
+  public constructor(msg?: Message, cmd?: ChatInputCommandInteraction) {
     if (msg) this.msg = msg;
     if (cmd) this.cmd = cmd;
   }
@@ -55,12 +67,12 @@ export class DiscordClient {
     if (!DiscordClient.client.isReady()) throw new Error('nowReady called before discord client was ready!');
     const normalCmds = Object.values(DiscordClient.commands).filter((cmd) => cmd.category !== 'Admin' && cmd.category !== 'Simple');
     const adminCmds = Object.values(DiscordClient.commands).filter((cmd) => cmd.category === 'Admin');
-    const allDiscordCmds: discord.ApplicationCommandData[] = normalCmds.map((data) => {
+    const allDiscordCmds: ApplicationCommandData[] = normalCmds.map((data) => {
       return {
         name: data.cmd,
         description: data.desc,
         options: data.opts.map((opts) => {
-          return { type: discord.ApplicationCommandOptionType.String, name: opts.name, description: opts.desc, required: opts.required };
+          return { type: ApplicationCommandOptionType.String, name: opts.name, description: opts.desc, required: opts.required };
         }),
       };
     });
@@ -71,19 +83,19 @@ export class DiscordClient {
         return {
           name: data.cmd,
           description: data.desc,
-          type: discord.ApplicationCommandOptionType.Subcommand,
+          type: ApplicationCommandOptionType.Subcommand,
           options: data.opts.map((opts) => {
-            return { type: discord.ApplicationCommandOptionType.String, name: opts.name, description: opts.desc, required: opts.required };
+            return { type: ApplicationCommandOptionType.String, name: opts.name, description: opts.desc, required: opts.required };
           }),
         };
       }),
     });
     await DiscordClient.client.application.commands.set(allDiscordCmds);
-    DiscordClient.client.user?.setPresence({ activities: [{ type: discord.ActivityType.Playing, name: `on the net - /help` }] });
+    DiscordClient.client.user?.setPresence({ activities: [{ type: ActivityType.Playing, name: `on the net - /help` }] });
     logger.info(
       `Discord client ready. Invite: ${DiscordClient.client.generateInvite({
-        scopes: [discord.OAuth2Scopes.Bot, discord.OAuth2Scopes.ApplicationsCommands],
-        permissions: [discord.PermissionsBitField.Flags.Administrator],
+        scopes: [OAuth2Scopes.Bot, OAuth2Scopes.ApplicationsCommands],
+        permissions: [PermissionsBitField.Flags.Administrator],
       })}`,
     );
   }
@@ -95,7 +107,7 @@ export class DiscordClient {
     await channel.send(message);
   }
 
-  public static async handleMessage(message: discord.Message) {
+  public static async handleMessage(message: Message) {
     if (message.content.startsWith(DiscordClient.cmdPrefix)) {
       const { word: cmd, remain: param } = parseNextWord(message.content, DiscordClient.cmdPrefix.length);
       logger.trace(`cmd: '${cmd}' params: '${param}' user: ${message.member?.user.username}#${message.member?.user.discriminator}`);
@@ -117,7 +129,7 @@ export class DiscordClient {
     }
   }
 
-  public static async handleInteraction(interaction: discord.Interaction) {
+  public static async handleInteraction(interaction: Interaction) {
     if (DiscordClient.client.application?.id === interaction.applicationId && interaction.isChatInputCommand()) {
       logger.trace(
         `slash cmd: '${interaction.commandName}' params: '${interaction.options.data}' user: ${interaction.member?.user.username}#${interaction.member?.user.discriminator}`,
