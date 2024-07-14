@@ -44,23 +44,23 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.6.0",
+    "@eslint/js": "^9.7.0",
     "@swc/core": "^1.6.13",
     "@types/eslint__js": "^8.42.3",
     "@types/express": "^4.17.21",
     "@types/node": "^20.14.10",
     "@types/uuid": "^10.0.0",
-    "@types/ws": "^8.5.10",
-    "@vitest/coverage-v8": "^1.6.0",
-    "eslint": "^9.6.0",
+    "@types/ws": "^8.5.11",
+    "@vitest/coverage-v8": "^2.0.2",
+    "eslint": "^9.7.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-formatter-unix": "^8.40.0",
     "memfs": "^4.9.3",
-    "prettier": "^3.3.2",
+    "prettier": "^3.3.3",
     "typescript": "5.4.5",
-    "typescript-eslint": "^7.15.0",
+    "typescript-eslint": "^7.16.0",
     "unplugin-swc": "^1.5.1",
-    "vitest": "^1.6.0"
+    "vitest": "^2.0.2"
   },
   "prettier": {
     "tabWidth": 2,
