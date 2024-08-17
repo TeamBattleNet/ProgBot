@@ -51,7 +51,7 @@ describe('Chip', () => {
       try {
         Chip.getById('123');
         expect.fail('Did not throw');
-      } catch (e) {} // eslint-disable-line no-empty
+      } catch (e) {} // eslint-disable-line no-empty, @typescript-eslint/no-unused-vars
     });
   });
 

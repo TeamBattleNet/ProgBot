@@ -16,4 +16,10 @@ export default [
       "max-len": ["error", { "code": 200 }],
     },
   },
+  {
+    files: ["**/*.spec.ts"],
+    rules: {
+      "@typescript-eslint/no-unused-expressions": "off",
+    },
+  },
 ]
