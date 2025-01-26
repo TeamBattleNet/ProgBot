@@ -61,7 +61,7 @@ describe('TwitchChannel', () => {
     });
 
     it('Throws an error if a comma is provided in a command to disable', async () => {
-      expect(async () => {
+      await expect(async () => {
         await chan.addDisabledCommands(['disabled', 'bad,cmd']);
       }).rejects.toThrowError();
     });
@@ -149,7 +149,7 @@ describe('TwitchChannel', () => {
 
     it('Throws an error if the channel already exists', async () => {
       findOneMock.mockResolvedValue('thing');
-      expect(async () => {
+      await expect(async () => {
         await TwitchChannel.createNewChannel('exists');
       }).rejects.toThrowError();
     });

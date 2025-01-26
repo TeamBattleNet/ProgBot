@@ -103,7 +103,7 @@ export class DiscordClient {
   public static async sendMessage(channelId: string, message: string) {
     const channel = DiscordClient.client.channels.cache.get(channelId);
     if (!channel) throw new Error(`Discord channel ${channelId} could not be found when trying to send a message`);
-    if (!channel.isTextBased()) throw new Error(`Trying to send message to discord channel ${channelId} which is not a text channel!`);
+    if (!channel.isSendable()) throw new Error(`Trying to send message to discord channel ${channelId} which is not a sendable channel!`);
     await channel.send(message);
   }
 
@@ -112,10 +112,12 @@ export class DiscordClient {
       const { word: cmd, remain: param } = parseNextWord(message.content, DiscordClient.cmdPrefix.length);
       logger.trace(`cmd: '${cmd}' params: '${param}' user: ${message.member?.user.username}#${message.member?.user.discriminator}`);
       const lowerCmd = cmd.toLowerCase();
-      if (DiscordClient.commands[lowerCmd]) {
+      if (DiscordClient.commands[lowerCmd] && message.channel.isSendable()) {
         // Start typing if reply takes time to generate (over 100ms)
         const timeout = setTimeout(() => {
-          message.channel.sendTyping().catch();
+          if ('sendTyping' in message.channel) {
+            message.channel.sendTyping().catch();
+          }
         }, 100);
         try {
           const reply = await DiscordClient.commands[lowerCmd].handler(new DiscordMsgOrCmd(message, undefined), param);

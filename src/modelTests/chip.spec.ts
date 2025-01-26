@@ -89,29 +89,29 @@ describe('Chip', () => {
 
     it('rejects malformed csv when missing an item column', async () => {
       vol.fromJSON({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,2,3' });
-      expect(async () => {
+      await expect(async () => {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
       }).rejects.toThrowError();
     });
 
     it('rejects malformed csv when extra item column', async () => {
       vol.fromJSON({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,2,3,aqua,extradata' });
-      expect(async () => {
+      await expect(async () => {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
       }).rejects.toThrowError();
     });
 
     it('rejects malformed csv when number column does not parse correctly', async () => {
       vol.fromJSON({ fakeCSVFile: 'id,name,category,rarity,damage,element\nnotNumber,name,std,2,3,aqua' });
-      expect(async () => {
+      await expect(async () => {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
       }).rejects.toThrowError();
       vol.fromJSON({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,notNumber,3,aqua' });
-      expect(async () => {
+      await expect(async () => {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
       }).rejects.toThrowError();
       vol.fromJSON({ fakeCSVFile: 'id,name,category,rarity,damage,element\n1,name,std,2,notNumber,aqua' });
-      expect(async () => {
+      await expect(async () => {
         await Chip.csvChipDBImport(queryRunnerStub, 'fakeCSVFile');
       }).rejects.toThrowError();
     });

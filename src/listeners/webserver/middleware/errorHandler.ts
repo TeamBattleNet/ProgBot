@@ -19,7 +19,8 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
   if (err) {
     logger.error(`${req.originalUrl}: ${err}`);
     const { httpStatusCode, returnError } = getError(err);
-    return res.status(httpStatusCode).send(returnError);
+    res.status(httpStatusCode).send(returnError);
+    return;
   }
   return next();
 }
