@@ -1,10 +1,12 @@
 import { TwitchChannel } from '../../models/twitchChannel.js';
 import { getLogger } from '../../logger.js';
-import { PubSubClient, PubSubHandler, PubSubRedemptionMessage } from '@twurple/pubsub';
+import { ApiClient } from '@twurple/api';
+import { EventSubWsListener } from '@twurple/eventsub-ws';
+import type { EventSubChannelRedemptionAddEvent, EventSubSubscription } from '@twurple/eventsub-base';
 
 const logger = getLogger('twitchPubSub');
 
-export type ChannelPointHandler = (msg: PubSubRedemptionMessage) => any;
+export type ChannelPointHandler = (msg: EventSubChannelRedemptionAddEvent) => void;
 
 export interface TwitchReward {
   rewardTitle: string;
@@ -13,7 +15,7 @@ export interface TwitchReward {
 
 export class TwitchEventClient {
   private static channelPointHandlers: { [rewardTitle: string]: ChannelPointHandler | undefined } = {};
-  private static listeners: { [userId: string]: PubSubHandler<never> } = {};
+  private static listeners: { [userId: string]: EventSubSubscription } = {};
 
   public static async connect() {
     const channels = await TwitchChannel.getChannelPointChannels();
@@ -32,22 +34,23 @@ export class TwitchEventClient {
     const authProvider = await channel.getAuthProvider();
     const channelToken = await authProvider.getAccessTokenForIntent('auth');
     if (!channelToken || !channelToken.userId) throw new Error("Couldn't get userId from channel auth provider");
-    const pubSubClient = new PubSubClient({ authProvider });
-    if (TwitchEventClient.listeners[channelToken.userId]) TwitchEventClient.listeners[channelToken.userId].remove();
+    const eventSubClient = new EventSubWsListener({ apiClient: new ApiClient({ authProvider }) });
+    eventSubClient.start();
+    if (TwitchEventClient.listeners[channelToken.userId]) TwitchEventClient.listeners[channelToken.userId].stop();
     delete TwitchEventClient.listeners[channelToken.userId];
-    TwitchEventClient.listeners[channelToken.userId] = pubSubClient.onRedemption(channelToken.userId, TwitchEventClient.redemptionHandler);
+    TwitchEventClient.listeners[channelToken.userId] = eventSubClient.onChannelRedemptionAdd(channelToken.userId, TwitchEventClient.redemptionHandler);
     logger.info(`Now listening for channel point redemptions on ${channel.channel}`);
   }
 
   public static async removeChannelPointsListener(userId: string) {
-    if (TwitchEventClient.listeners[userId]) await TwitchEventClient.listeners[userId].remove();
+    if (TwitchEventClient.listeners[userId]) await TwitchEventClient.listeners[userId].stop();
     delete TwitchEventClient.listeners[userId];
   }
 
-  public static async redemptionHandler(msg: PubSubRedemptionMessage) {
+  public static async redemptionHandler(event: EventSubChannelRedemptionAddEvent) {
     try {
-      logger.trace(`${msg.userDisplayName} redeemed ${msg.rewardTitle} in ${msg.channelId}: ${msg.message}`);
-      await TwitchEventClient.channelPointHandlers[msg.rewardTitle]?.(msg);
+      logger.trace(`${event.userDisplayName} redeemed ${event.rewardTitle} in ${event.broadcasterId}`);
+      await TwitchEventClient.channelPointHandlers[event.rewardTitle]?.(event);
     } catch (e) {
       logger.error(e);
     }
@@ -59,7 +62,7 @@ export class TwitchEventClient {
   }
 
   public static async shutdown() {
-    await Promise.all(Object.values(TwitchEventClient.listeners).map((listener) => listener.remove()));
+    await Promise.all(Object.values(TwitchEventClient.listeners).map((listener) => listener.stop()));
     TwitchEventClient.listeners = {};
   }
 }
